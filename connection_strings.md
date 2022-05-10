@@ -1,0 +1,5 @@
+database = "arctic_analysts_capstone"
+table = "dbo.table_name"
+user = "arctic_analysts"
+password  = "ThisPassw0rd!"
+server = "gen10-data-fundamentals-22-02-sql-server.database.windows.net"
