@@ -61,7 +61,7 @@ def starter_vis(data_dict):
 
 app.layout = html.Div(
     [
-        dcc.Interval(id="interval-component", interval=3 * 1000, n_intervals=0),
+        dcc.Interval(id="interval-component", interval=10 * 1000, n_intervals=0),
         dbc.Row(
             html.H1("Arctic Analysts Starter Dashboard"),
             className = 'text-center'
