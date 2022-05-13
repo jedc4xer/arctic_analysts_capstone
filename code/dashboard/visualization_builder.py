@@ -43,8 +43,8 @@ def build_fig_two():
     )
     return fig
 
-def build_fig_three():
-    fig = px.bar()
+def build_fig_three(income_df):
+    fig = px.bar(income_df, x = 'year', y = 'MedianIncome', color = 'StateFips')
     fig.update_layout(
         title=dict(
             text='<b>Chart 3<b>',
@@ -60,13 +60,21 @@ def build_fig_three():
             'color':'rgba(0,0,0,1)'
         }
     )
+    fig.update_xaxes(ticks="outside", tickwidth = 1, ticklen=7, tickcolor = 'rgba(0,0,0,0)')
+    fig.update_yaxes(ticks="outside", tickwidth = 1, ticklen=6, tickcolor = 'rgba(0,0,0,0)')
     return fig
 
-def build_fig_four():
-    fig = px.bar()
+def build_fig_four(house_prices):
+    
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(x=house_prices['timestamp'], y = house_prices['record_count'], fill='tonexty',
+                  fillcolor='darkblue', line_color='darkblue')
+    )
+        
     fig.update_layout(
         title=dict(
-            text='<b>Chart 1<b>',
+            text='<b>Chart 4<b>',
             font=dict(
                 size = 20
             )
@@ -79,4 +87,7 @@ def build_fig_four():
             'color':'rgba(0,0,0,1)'
         }
     )
+    fig.update_xaxes(ticks="outside", tickwidth = 1, ticklen=7, tickcolor = 'rgba(0,0,0,0)')
+    fig.update_yaxes(ticks="outside", tickwidth = 1, ticklen=6, tickcolor = 'rgba(0,0,0,0)')
+    
     return fig
