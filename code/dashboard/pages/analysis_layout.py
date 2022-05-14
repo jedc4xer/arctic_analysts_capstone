@@ -8,7 +8,7 @@ from dash.exceptions import PreventUpdate
 
 ANALYSIS_LAYOUT = html.Div(
     [
-        dcc.Interval(id="analysis_page_interval", interval=30 * 1000, n_intervals=0),
+        dcc.Interval(id="analysis_page_interval", interval=5 * 1000, n_intervals=0),
         # dbc.Row(html.H1("US Housing Analysis"), className="text-center"),
         dbc.Row(html.Div(id="analysis_page_record_count"), className="text-center",),
         dbc.Row(
@@ -80,7 +80,10 @@ ANALYSIS_LAYOUT = html.Div(
 )
 def get_data_and_visualize(n):
     # Get the Data
-    data_dict = get_data()
+    print(f'The new "n" is > {n} <')
+    if n > 3:
+        n = -1
+    data_dict = get_data(n)
 
     # Send the Data to the Visual Builder
     fig1, fig2, fig3, fig4 = analysis_viz_builders(data_dict)
@@ -89,8 +92,8 @@ def get_data_and_visualize(n):
     return fig1, fig2, fig3, fig4
 
 
-def get_data():
-    data_dict = data_con.prepare_data()
+def get_data(n):
+    data_dict = data_con.prepare_data(n)
     return data_dict
 
 
