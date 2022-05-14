@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 from pages.navbar_layout import *  # Importing all the variables from the navbar_layout file
 from pages.analysis_layout import ANALYSIS_LAYOUT
+from pages.map_layout import MAP_LAYOUT
 from pages.home_layout import *
 
 # app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -26,7 +27,7 @@ def render_page_content(pathname):
         return ANALYSIS_LAYOUT
 
     elif pathname == "/page-2":
-        return html.P("Oh cool, this is page 2!")
+        return MAP_LAYOUT
 
     elif pathname == "/page-3":
         return html.P("Oh cool, this is page 3!")

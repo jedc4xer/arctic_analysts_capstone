@@ -6,7 +6,35 @@ from collections import Counter
 from config import database, user, password, server
 
 
-def prepare_data():
+def prepare_iterative_data(target_table, n):
+    
+    if target_table == 'building_permits':
+        conn = pymssql.connect(server, user, password, database)
+        cursor = conn.cursor()
+
+        query = f"SELECT DISTINCT Date FROM building_permits"
+
+        available_years_df = pd.read_sql(query, conn)
+        available_years_df.sort_values(by = 'Date', inplace = True)
+        available_dates = available_years_df.Date.astype('str').tolist()
+
+        picked_date = available_dates[n]
+        columns_to_select = 'Date, CountyFips, County, StateFips, [1_Unit]'
+        query = f"SELECT {columns_to_select} FROM building_permits WHERE building_permits.Date = '{picked_date}'"
+        target_df = pd.read_sql(query, conn)
+        print(f'\nBefore Data Management: {available_years_df.shape[0]}')
+        
+    elif target_table == 'house_prices':
+        
+        pass
+    
+    return target_df
+    
+    
+    
+    
+def prepare_data(n = False):
+    
     conn = pymssql.connect(server, user, password, database)
     cursor = conn.cursor()
 
@@ -19,8 +47,7 @@ def prepare_data():
             query = f"SELECT * FROM {table}"
 
         prepared_df = pd.read_sql(query, conn)
-        print(f"Queried dbo.{table}")
-        print(f"\nBefore Data Management: {prepared_df.shape[0]}")
+        print(f"Queried dbo.{table}: {prepared_df.shape[0]} records.")
 
         # Send to data transformation function based on what the data is
         if table == "median_income":
@@ -30,7 +57,6 @@ def prepare_data():
 
         print(f"After Data Management: {prepared_df.shape[0]}\n")
         prepared_data[table] = prepared_df
-        print(f"Finished {table}: Processed {len(prepared_df)} records")
     return prepared_data
 
 
