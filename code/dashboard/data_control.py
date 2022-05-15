@@ -5,6 +5,14 @@ import datetime as dt
 from collections import Counter
 from config import database, user, password, server
 
+def pick_date(target_table, n):
+    query = f"SELECT DISTINCT Date FROM building_permits"
+
+    available_years_df = pd.read_sql(query, conn)
+    available_years_df.sort_values(by = 'Date', inplace = True)
+    available_dates = available_years_df.Date.astype('str').tolist()
+
+    picked_date = available_dates[n]
 
 def prepare_iterative_data(target_table, n):
     
@@ -19,7 +27,7 @@ def prepare_iterative_data(target_table, n):
         available_dates = available_years_df.Date.astype('str').tolist()
 
         picked_date = available_dates[n]
-        columns_to_select = 'Date, CountyFips, County, StateFips, [1_Unit]'
+        columns_to_select = 'Date, FIPS, County, NewUnits, NewBuildings'
         query = f"SELECT {columns_to_select} FROM building_permits WHERE building_permits.Date = '{picked_date}'"
         target_df = pd.read_sql(query, conn)
         print(f'\nBefore Data Management: {available_years_df.shape[0]}')
@@ -30,7 +38,8 @@ def prepare_iterative_data(target_table, n):
     
     return target_df
     
-    
+
+
     
     
 def prepare_data(n = False):
