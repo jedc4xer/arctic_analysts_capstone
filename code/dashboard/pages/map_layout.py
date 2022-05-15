@@ -5,7 +5,7 @@ from dash import Input, Output, dcc, html, callback
 
 MAP_LAYOUT = html.Div(
     [
-        dcc.Interval(id="map_page_interval", interval=10 * 1000, n_intervals=250),
+        dcc.Interval(id="map_page_interval", interval=10 * 1000, n_intervals=0),
         dbc.Row(
             [
                 dbc.Col(
