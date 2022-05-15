@@ -6,7 +6,8 @@ from pages.analysis_layout import ANALYSIS_LAYOUT
 from pages.map_layout import MAP_LAYOUT
 from pages.home_layout import *
 
-# app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+print("Here again at home base.")
+
 app = dash.Dash(
     __name__, external_stylesheets=[THEME], suppress_callback_exceptions=True
 )

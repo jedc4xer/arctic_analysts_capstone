@@ -5,89 +5,40 @@ import datetime as dt
 from collections import Counter
 from config import database, user, password, server
 
-def pick_date(target_table, n):
-    query = f"SELECT DISTINCT Date FROM building_permits"
 
-    available_years_df = pd.read_sql(query, conn)
-    available_years_df.sort_values(by = 'Date', inplace = True)
-    available_dates = available_years_df.Date.astype('str').tolist()
-
-    picked_date = available_dates[n]
-
-def prepare_iterative_data(target_table, n):
-    
-    if target_table == 'building_permits':
-        conn = pymssql.connect(server, user, password, database)
-        cursor = conn.cursor()
-
-        query = f"SELECT DISTINCT Date FROM building_permits"
-
-        available_years_df = pd.read_sql(query, conn)
-        available_years_df.sort_values(by = 'Date', inplace = True)
-        available_dates = available_years_df.Date.astype('str').tolist()
-
-        picked_date = available_dates[n]
-        columns_to_select = 'Date, FIPS, County, NewUnits, NewBuildings'
-        query = f"SELECT {columns_to_select} FROM building_permits WHERE building_permits.Date = '{picked_date}'"
-        target_df = pd.read_sql(query, conn)
-        print(f'\nBefore Data Management: {available_years_df.shape[0]}')
-        
-    elif target_table == 'house_prices':
-        
-        pass
-    
-    return target_df
-    
-
-
-    
-    
-def prepare_data(n = False):
-    
+def sql_query(query):
     conn = pymssql.connect(server, user, password, database)
     cursor = conn.cursor()
-
-    table_list = ["median_income", "house_prices"]
-    prepared_data = {}
-    for table in table_list:
-        if table == "house_prices":
-            query = f"SELECT * FROM {table} WHERE County LIKE '%Coconino%'"
-        else:
-            query = f"SELECT * FROM {table}"
-
-        prepared_df = pd.read_sql(query, conn)
-        print(f"Queried dbo.{table}: {prepared_df.shape[0]} records.")
-
-        # Send to data transformation function based on what the data is
-        if table == "median_income":
-            prepared_df = prepare_income_data(prepared_df)
-        elif table == "house_prices":
-            prepared_df = prepare_house_price_data(prepared_df).head(100)
-
-        print(f"After Data Management: {prepared_df.shape[0]}\n")
-        prepared_data[table] = prepared_df
-    return prepared_data
+    queried_data = pd.read_sql(query, conn)
+    return queried_data
 
 
-def prepare_house_price_data(df):
-    df.sort_values(by="timestamp", inplace=True)
-    df.reset_index(drop=True, inplace=True)
-    df.reset_index(inplace=True)
-    df.rename(columns={"index": "record_count"}, inplace=True)
-    df["timestamp"] = df["timestamp"].apply(
-        lambda x: dt.datetime.fromtimestamp(x / 1000)
-    )
-    return df
+#### Below is where you can query the database and get data
+#### Two examples are shown, the first is a generator that queries
+#### a single time and then returns a subset of the data with each
+#### callback. The second is a standard function that returns data once.
 
 
-def prepare_income_data(income_df):
-    income_df = income_df[(income_df["AgeGroup"] == "overall")]
-    return income_df.head(100)
+def bpm_by_month_map_data(current_state="OFF"):
+    """ This is a generator that will return a subset of the data each run. """
+
+    print(current_state)
+    query = "SELECT * FROM building_permits"
+    bpm_by_month = sql_query(query)
+
+    bpm_by_month.sort_values(by="Date", inplace=True)
+    bpm_by_month["Date"] = bpm_by_month.Date.astype("str")
+    filtered = bpm_by_month.Date.unique().tolist()
+    for date in filtered:
+        filtered_df = bpm_by_month[(bpm_by_month.Date == date)]
+        print(f"bpm_by_month_generator: {date}")
+        yield filtered_df
 
 
-def prepare_source_three():
-    pass
+def income_data():
+    """ This is a static call that will only return data once."""
 
-
-def prepare_source_four():
-    pass
+    print("Querying Income Data")
+    query = "SELECT * FROM median_income WHERE AgeGroup = 'overall'"
+    income_df = sql_query(query)
+    return income_df

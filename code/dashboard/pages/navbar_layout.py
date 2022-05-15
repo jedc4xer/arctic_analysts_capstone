@@ -12,7 +12,9 @@ NAVIGATION_BAR = dbc.Navbar(
                     [
                         dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
                         dbc.Col(
-                            dbc.NavbarBrand("Housing Analysis Dashboard", className="ms-3")
+                            dbc.NavbarBrand(
+                                "Housing Analysis Dashboard", className="ms-3"
+                            )
                         ),
                     ],
                     className="g-0 ms-auto flex-nowrap mt-4 mt-md-0",
