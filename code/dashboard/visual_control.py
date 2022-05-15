@@ -76,14 +76,13 @@ with open('2021_US_Counties_3.7.json') as file:
     
     
 def build_map_one(df):
-    df['locale_fips'] = df.StateFips + df.CountyFips
     data_date = df['Date'].unique().tolist()[0]
     data_date = dt.datetime.strftime(data_date, "%B %Y")
     fig = px.choropleth(
         df, 
         geojson=counties, 
-        locations = 'locale_fips', 
-        color = '1_Unit',
+        locations = 'FIPS', 
+        color = 'NewUnits',
         color_continuous_scale = "rdylgn_r", 
         scope = "usa"
     )
