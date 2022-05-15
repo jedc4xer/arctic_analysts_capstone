@@ -19,12 +19,10 @@ ANALYSIS_LAYOUT = html.Div(
                         # figure=fig1, For a static graph I believe this is useful
                         style={
                             "padding": "10px",
-                            "border-radius": "20px",
                             "float": "left",
-                            "width": "2",
                             "height": "50vh",
                         },
-                    )
+                    ), 
                 ),
                 dbc.Col(
                     [
@@ -33,23 +31,22 @@ ANALYSIS_LAYOUT = html.Div(
                             style={
                                 "padding": "10px",
                                 "float": "right",
-                                "width": "6",
                                 "height": "25vh",
                             },
                         ),
+
                         dcc.Graph(
                             id="analysis_page_third",
                             style={
                                 "padding": "10px",
                                 "float": "right",
-                                "width": "6",
                                 "height": "25vh",
                             },
-                        ),
-                    ]
-                ),
+                        ), 
+                    ], width="3",
+                ), 
             ],
-            className="h-75",
+            className="h-50",
         ),
         dbc.Row(
             [
