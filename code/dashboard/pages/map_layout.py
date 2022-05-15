@@ -5,7 +5,7 @@ from dash import Input, Output, dcc, html, callback
 
 MAP_LAYOUT = html.Div(
     [
-        dcc.Interval(id="map_page_interval", interval=10 * 1000, n_intervals=0),
+        dcc.Interval(id="map_page_interval", interval=15 * 1000, n_intervals=0),
         dbc.Row(
             [
                 dbc.Col(
@@ -36,13 +36,20 @@ MAP_LAYOUT = html.Div(
     className="h-50",
 )
 
+try:
+    print(n)
+except:
+    print("Starting Generator")
+    bpm_by_month_generator = data_con.bpm_by_month_map_data("STARTED")
+
 
 @callback(
-    Output("map_page_map_1", "figure"), 
+    Output("map_page_map_1", "figure"),
     Output("map_page_map_2", "figure"),
     Input("map_page_interval", "n_intervals"),
 )
 def get_data_and_visuals(n):
-    data_1 = data_con.prepare_iterative_data("building_permits", n)
-    mapfig1 = viz.build_map_one(data_1)
+
+    bpm_by_month_data = next(bpm_by_month_generator)
+    mapfig1 = viz.build_map_one(bpm_by_month_data)
     return mapfig1, mapfig1
