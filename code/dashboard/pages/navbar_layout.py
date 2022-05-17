@@ -13,7 +13,7 @@ NAVIGATION_BAR = dbc.Navbar(
                         dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
                         dbc.Col(
                             dbc.NavbarBrand(
-                                "Housing Analysis Dashboard", className="ms-3"
+                                "New Jersey Home Affordability", className="ms-3"
                             )
                         ),
                     ],
@@ -23,7 +23,7 @@ NAVIGATION_BAR = dbc.Navbar(
                 href="https://plotly.com",
                 style={"textDecoration": "none"},
             ),
-            dbc.Col(width=4),
+            dbc.Col(width=3),  # was 4
             dbc.Col(
                 dbc.Nav(
                     dbc.NavLink("Home", href="/", active="exact"), pills=True, fill=True
@@ -46,6 +46,13 @@ NAVIGATION_BAR = dbc.Navbar(
             dbc.Col(
                 dbc.Nav(
                     dbc.NavLink("ML Models", href="/page-3", active="exact"),
+                    pills=True,
+                    fill=True,
+                )
+            ),
+            dbc.Col(
+                dbc.Nav(
+                    dbc.NavLink("Test Page", href="/page-4", active="exact"),
                     pills=True,
                     fill=True,
                 )

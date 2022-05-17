@@ -3,30 +3,43 @@ import visual_control as viz
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, callback
 
+
+def get_data_and_visuals():
+
+    mapfig1 = viz.build_static_map_one()
+    mapfig2 = viz.build_static_map_two()
+    return mapfig1, mapfig2
+
+
+mapfig1, mapfig2 = get_data_and_visuals()
+
 MAP_LAYOUT = html.Div(
     [
-        dcc.Interval(id="map_page_interval", interval=15 * 1000, n_intervals=0),
+        # Not sure that we really want an interval on this page
+        # dcc.Interval(id="map_page_interval", interval=15 * 1000, n_intervals=0),
         dbc.Row(
             [
                 dbc.Col(
                     dcc.Graph(
                         id="map_page_map_1",
+                        figure=mapfig1,
                         style={
-                            "padding": "10px",
+                            "padding": "5px",
                             "float": "left",
                             "width": "5",
-                            "height": "50vh",
+                            "height": "80vh",
                         },
                     ),
                 ),
                 dbc.Col(
                     dcc.Graph(
                         id="map_page_map_2",
+                        figure=mapfig2,
                         style={
-                            "padding": "10px",
+                            "padding": "5px",
                             "float": "right",
                             "width": "5",
-                            "height": "50vh",
+                            "height": "80vh",
                         },
                     )
                 ),
@@ -36,20 +49,20 @@ MAP_LAYOUT = html.Div(
     className="h-50",
 )
 
-try:
-    print(n)
-except:
-    print("Starting Generator")
-    bpm_by_month_generator = data_con.bpm_by_month_map_data("STARTED")
+# try:
+#     print(n)
+# except:
+#     print("Starting Generator")
+#     bpm_by_month_generator = data_con.bpm_by_month_map_data("STARTED")
 
 
-@callback(
-    Output("map_page_map_1", "figure"),
-    Output("map_page_map_2", "figure"),
-    Input("map_page_interval", "n_intervals"),
-)
-def get_data_and_visuals(n):
+# @callback(
+#     Output("map_page_map_1", "figure"),
+#     Output("map_page_map_2", "figure"),
+#     Input("map_page_interval", "n_intervals"),
+# )
+# def get_data_and_visuals(n):
 
-    bpm_by_month_data = next(bpm_by_month_generator)
-    mapfig1 = viz.build_map_one(bpm_by_month_data)
-    return mapfig1, mapfig1
+#     #bpm_by_month_data = next(bpm_by_month_generator)
+#     mapfig1 = viz.build_static_map_one()
+#     return mapfig1, mapfig1
