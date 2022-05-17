@@ -16,9 +16,9 @@ def analysis_viz_builders():
 
     # fig3 = viz.build_fig_three(data_dict["median_income"])
 
-    fig4 = viz.build_income_line_chart(data_con.income_data())
+    # fig4 = viz.build_income_line_chart(data_con.income_data())
 
-    # fig4 = viz.build_fig_four()
+    fig4 = viz.build_fig_four()
 
     return fig1, fig2, fig3, fig4
 
