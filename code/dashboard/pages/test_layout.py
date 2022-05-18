@@ -10,15 +10,6 @@ def get_data_and_visuals():
     return mapfig1
 
 
-try:
-    if mapfig1:
-        print("The map has already been built.")
-
-except:
-    print("Looks like the map hasn't been built")
-    # mapfig1 = get_data_and_visuals()
-
-
 TEST_LAYOUT = html.Div(
     [
         dbc.Row(html.H1("Test Page"), className="text-center"),

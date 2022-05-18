@@ -2,8 +2,10 @@ import data_control as data_con
 import visual_control as viz
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, callback
+import functools
 
 
+@functools.lru_cache()
 def get_data_and_visuals():
 
     mapfig1 = viz.build_static_map_one()
@@ -16,7 +18,7 @@ mapfig1, mapfig2 = get_data_and_visuals()
 MAP_LAYOUT = html.Div(
     [
         # Not sure that we really want an interval on this page
-        # dcc.Interval(id="map_page_interval", interval=15 * 1000, n_intervals=0),
+        #dcc.Interval(id="map_page_interval", interval=15 * 1000, n_intervals=0),
         dbc.Row(
             [
                 dbc.Col(
@@ -63,6 +65,15 @@ MAP_LAYOUT = html.Div(
 # )
 # def get_data_and_visuals(n):
 
-#     #bpm_by_month_data = next(bpm_by_month_generator)
 #     mapfig1 = viz.build_static_map_one()
+#     mapfig2 = viz.build_static_map_two()
 #     return mapfig1, mapfig1
+
+# def get_data_and_visuals():
+
+#     mapfig1 = viz.build_static_map_one()
+#     mapfig2 = viz.build_static_map_two()
+#     return mapfig1, mapfig2
+
+
+# mapfig1, mapfig2 = get_data_and_visuals()

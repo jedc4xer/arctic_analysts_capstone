@@ -3,12 +3,18 @@ import visual_control as viz
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, callback
 from dash.exceptions import PreventUpdate
+import functools
 
-
+try:
+    yearly_income = data_con.income_data_generator()
+except Exception as E:
+    print("Error", E)
+        
+@functools.lru_cache()
 def analysis_viz_builders():
     # function calls for visualization builders
     # Starter for initial dash populating
-    fig1 = viz.build_fig_one()
+    fig1 = viz.build_fig_two()
 
     fig2 = viz.build_fig_two()
 
@@ -36,11 +42,14 @@ ANALYSIS_LAYOUT = html.Div(
         dbc.Row(
             [
                 dbc.Col(
-                    dcc.Graph(
-                        id="analysis_page_first",
-                        figure=fig1,
-                        style={"padding": "10px", "float": "left", "height": "50vh",},
-                    ),
+                    [
+                        dcc.Interval(id="graph_1", interval=.5 * 1000, n_intervals=0),
+                        dcc.Graph(
+                            id="analysis_page_first",
+                            #figure=fig1,
+                            style={"padding": "10px", "float": "left", "height": "50vh",},
+                        ),
+                    ]
                 ),
                 dbc.Col(
                     [
@@ -70,9 +79,10 @@ ANALYSIS_LAYOUT = html.Div(
         ),
         dbc.Row(
             [
+                dcc.Interval(id="graph_2", interval=.5 * 1000, n_intervals=0),
                 dcc.Graph(
-                    id="median_income_line_chart",
-                    figure=fig4,
+                    id="median_income_chart",
+                    #figure=fig4,
                     style={
                         "padding": "10px",
                         "float": "right",
@@ -85,3 +95,20 @@ ANALYSIS_LAYOUT = html.Div(
         ),
     ]
 )
+
+@callback(
+    Output("analysis_page_first", "figure"),
+    Output("median_income_chart", "figure"),
+    Input("graph_1", 'n_intervals')
+    )
+def analysis_viz_builders1(n):
+    fig1 = viz.build_fig_one(yearly_income)
+    return fig1, fig1
+
+# @callback(
+#     Output("median_income_chart", "figure"),
+#     Input("graph_2", 'n_intervals')
+#     )
+# def analysis_viz_builders1(n):
+#     fig1 = viz.build_fig_one(yearly_income)
+#     return fig1
