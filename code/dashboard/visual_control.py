@@ -7,12 +7,23 @@ import data_control as data_con
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+def format_active_graph_visual(fig, min_range, max_range):
+    print('Formatting')
+    fig.update_xaxes(showline=True,
+                     ticks="outside", 
+                     tickwidth=1, 
+                     ticklen=7,
+                     tickcolor="rgba(255,255,255,1)"
+                    )
+    fig.update_yaxes(showline=True, 
+                     range = [min_range - (min_range*.1),
+                              max_range+(min_range*.1)], 
+                     ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(255,255,255,1)"
+                    )
+    return fig
+
 
 def build_polynomial_model(model_data):
-    # try:
-    #     model_data = next(poly_gen)
-    # except Exception as E:
-    #     print(E)
         
     target = 'MedianHousePrice' #This is assumed in the generator
     
@@ -25,14 +36,34 @@ def build_polynomial_model(model_data):
     fig1 = px.line(x = original['predictor'],
                     y = original[target],
                     )
-    fig1.update_traces(line=dict(color='black'))
+    fig1.update_traces(line=dict(color='black', width=3))
     
     fig2 = px.line(x=predictions['x_var'],
                     y=predictions['predictions'])
-    fig2.update_traces(line=dict(color='green'))
-    
+    fig2.update_traces(line=dict(color='#ED215C', width=3, dash='dash'))
+
     final_fig = go.Figure(data = fig1.data + fig2.data)
-    final_fig.update_layout(title = f'{target} | Degrees: {i}')
+    final_fig.update_layout(
+        title=dict(
+            text=f'<b>{target} | Degrees: {i}<b>',
+            font=dict(size=20),
+        ),
+        paper_bgcolor="rgba(0,0,0,.1)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="white",
+        modebar={
+            "bgcolor": "rgba(0,0,0,0)", 
+            "color": "rgba(1,0,0,0)"
+        }
+    )
+    final_fig.update_xaxes(showgrid=False)
+    final_fig.update_yaxes(showgrid=False)
+    
+    min_range = original[target].min() 
+    max_range = original[target].max()
+
+    
+    final_fig = format_active_graph_visual(final_fig, min_range, max_range)
     return final_fig
 
 

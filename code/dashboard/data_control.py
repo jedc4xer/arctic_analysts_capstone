@@ -230,7 +230,7 @@ def income_data_generator(current_state = 'OFF'):
             
 
 def create_poly_models(master_table, target):
-    """ This is a generator for ml model visualizations. """
+    """ This function creates the models for the generator. """
 
     master_table['date'] = master_table.apply(lambda row: convert_to_date(row.Year, row.Month), axis = 1)
 
@@ -259,6 +259,7 @@ def create_poly_models(master_table, target):
         model_results = [i, x_poly, poly_pred]
         results[rmse] = model_results
         model_results = [i, result_df, filtered[['predictor',target]].copy()]
+    
         models.append(model_results)
         if rmse < best_result:
             best_result = rmse
