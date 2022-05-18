@@ -2,5 +2,6 @@
 *.log
 *.ipynb_checkpoints
 gender_ownership_state.pdf
+polynomial_models.pdf
 */.ipynb_checkpoints/*.ipynb
 __pycache__/
