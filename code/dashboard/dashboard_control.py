@@ -4,7 +4,7 @@ from dash import Input, Output, dcc, html
 from pages.navbar_layout import *  # Importing all the variables from the navbar_layout file
 from pages.analysis_layout import ANALYSIS_LAYOUT
 from pages.map_layout import MAP_LAYOUT
-from pages.test_layout import TEST_LAYOUT
+#from pages.test_layout import TEST_LAYOUT
 from pages.models_layout import MODEL_LAYOUT
 from pages.home_layout import *
 
@@ -21,7 +21,10 @@ content = html.Div(id="page-content", style=CONTENT_STYLE)
 app.layout = html.Div([dcc.Location(id="url"), navbar, content])
 
 
-@app.callback(Output("page-content", "children"), [Input("url", "pathname")])
+@app.callback(
+    Output("page-content", "children"),
+    [Input("url", "pathname")],
+)
 def render_page_content(pathname):
     if pathname == "/":
         print("Picked Home Page")
@@ -40,9 +43,9 @@ def render_page_content(pathname):
         print("Picked ML Model Page")
         return MODEL_LAYOUT
 
-    elif pathname == "/page-4":
-        print("Picked Test Page")
-        return TEST_LAYOUT
+    # elif pathname == "/page-4":
+    #     print("Picked Test Page")
+    #     return TEST_LAYOUT
 
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(

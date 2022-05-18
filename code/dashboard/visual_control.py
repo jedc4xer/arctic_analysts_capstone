@@ -1,4 +1,5 @@
 import json
+import functools
 import datetime as dt
 from config import counties
 import plotly.express as px
@@ -7,14 +8,43 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def build_fig_one():
+def build_polynomial_model(model_data):
+    # try:
+    #     model_data = next(poly_gen)
+    # except Exception as E:
+    #     print(E)
+        
+    target = 'MedianHousePrice' #This is assumed in the generator
+    
+    i, predictions, original = model_data
+    
+    original['predictor'] = original['predictor'].astype('int')
+    original[target] = original[target].astype('float')
+    
+    
+    fig1 = px.line(x = original['predictor'],
+                    y = original[target],
+                    )
+    fig1.update_traces(line=dict(color='black'))
+    
+    fig2 = px.line(x=predictions['x_var'],
+                    y=predictions['predictions'])
+    fig2.update_traces(line=dict(color='green'))
+    
+    final_fig = go.Figure(data = fig1.data + fig2.data)
+    final_fig.update_layout(title = f'{target} | Degrees: {i}')
+    return final_fig
+
+
+
+def build_fig_one(yearly_income):
 
     print("\nBuilding Median Income by Age Group chart.")
-    df = data_con.income_data()
-
+    full, df = next(yearly_income)
+    full = None
     # Filter by a county
     df = df[(df.FIPS == "34001")]
-    fig = px.bar(x=df["Year"], y=df["MedianIncome"], color=df["AgeGroup"])
+    fig = px.bar(x=df["Year"], y=df["MedianIncome"], color=df["AgeGroup"], barmode="group")
     fig.update_layout(
         title=dict(
             text=f"<b>Median Income by Age Group for {df.FIPS.tolist()[0]}<b>",
@@ -99,7 +129,7 @@ def build_income_line_chart(income_df):
 def build_static_map_one():
 
     df = data_con.age_filtered_data()
-
+    df = df[(df.date == '2022-01-15')]
     print("Building Median Home Price Choropleth Map")
 
     # fig = px.choropleth_mapbox(df,
@@ -119,7 +149,7 @@ def build_static_map_one():
         color="MedianHousePrice",
         locations="FIPS",
         featureidkey="properties.FIPSSTCO",
-        animation_frame="date",
+        #animation_frame="date",
     )
 
     fig.update_geos(
@@ -148,11 +178,12 @@ def build_static_map_one():
     print("Finished Building Median Home Price Choropleth Map")
     return fig
 
-
+@functools.lru_cache()
 def build_static_map_two():
 
     df = data_con.income_data()
     df = df.sort_values(by="Year")
+    df = df[(df.Year == 2019)]
     print("Building Median Income Choropleth Map")
 
     fig = px.choropleth_mapbox(
@@ -164,7 +195,7 @@ def build_static_map_two():
         center={"lat": 40.15, "lon": -74.421983},
         mapbox_style="carto-positron",
         zoom=6.5,
-        animation_frame="Year",
+        #animation_frame="Year",
     )
 
     #     fig = px.choropleth(df,
