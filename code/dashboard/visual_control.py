@@ -50,11 +50,9 @@ def format_active_graph_visual(fig, min_range, max_range):
 ####################################
 
 
-def build_polynomial_model(model_data):
+def build_polynomial_model(model_data, target):
     """ This function creates a visualization for a polynomial regression model. """
         
-    target = 'MedianHousePrice' #This is assumed in the generator
-    
     # This data was returned from a generator yield on the MODEL_LAYOUT page.
     i, predictions, original = model_data
     

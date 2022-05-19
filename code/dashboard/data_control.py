@@ -229,12 +229,12 @@ def income_data_generator(current_state = 'OFF'):
             yield income_df, filtered
             
 
-def create_poly_models(master_table, target):
+def create_poly_models(master_table, target, locale):
     """ This function creates the models for the generator. """
 
     master_table['date'] = master_table.apply(lambda row: convert_to_date(row.Year, row.Month), axis = 1)
 
-    filtered = master_table[(master_table['AgeGroup'] == '25-44') & (master_table.FIPS == '34001')].copy()
+    filtered = master_table[(master_table['AgeGroup'] == '25-44') & (master_table.FIPS == locale)].copy()
     filtered.sort_values(by = 'date', inplace = True)
     filtered.reset_index(drop = True, inplace = True)
     filtered.reset_index(inplace = True)
@@ -248,7 +248,7 @@ def create_poly_models(master_table, target):
     results = {}
     models = []
     best_result = 100000
-    for i in range(1,45):
+    for i in range(45,1, -1):
         print('Running Model')
         try:
             model, x_poly, poly_pred, rmse = run_predictions(X, y, i)
@@ -265,10 +265,10 @@ def create_poly_models(master_table, target):
             best_result = rmse
         else:
             print("Breaking Model loop.")
-            break
+            #break # When iterating in reverse, this stops too soon so uncomment if iterating in positive direction
     return models
 
-def poly_generator(target = 'MedianHousePrice'):
+def poly_generator():
     """ This generator returns model results to a visualization. """
     try:
         data_hold = get_and_hold_data()
@@ -277,11 +277,47 @@ def poly_generator(target = 'MedianHousePrice'):
         print('DataHold is already created.')
         
     master_table = next(data_hold)
-    models = create_poly_models(master_table, target)
     
-    while True:
-        best = False
-        for i, item in enumerate(models):
-            if i == len(models):
-                best = True
-            yield item
+    current_target, current_locale = 'MedianHousePrice', '34001'
+    target, locale = current_target, current_locale
+    
+    target_change = False
+    passed = False
+    resp = None
+    while not passed:
+        print(f'The target is currently {current_target}')
+        models = create_poly_models(master_table, target, locale)
+
+        while True:
+            best = False
+            for i, item in enumerate(models):
+                if i == len(models):
+                    best = True
+                try:
+                    target, locale = yield item
+                except Exception as E:
+                    target, locale = yield item
+                
+                if target is None:
+                    target, locale = current_target, current_locale
+                else:
+                    target_change, current_target, current_locale = check_result(
+                        target, locale, current_target, current_locale
+                    )
+                    
+                if target_change:
+                    break
+                    
+            if target_change:
+                print('Changing the targets', current_target, current_locale)
+                target_change = False
+                break
+                
+def check_result(target, locale, current_target, current_locale):
+    target_change = False
+    if (target != current_target or locale != current_locale):
+        target_change = True
+        current_target = target
+        current_locale = locale
+    return target_change, current_target, current_locale
+    
