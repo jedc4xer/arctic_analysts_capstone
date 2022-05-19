@@ -1,4 +1,5 @@
 import json
+import time
 import functools
 import datetime as dt
 from config import counties
@@ -7,93 +8,123 @@ import data_control as data_con
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+# Visual Formatting Functions
+##################################
+
 def format_active_graph_visual(fig, min_range, max_range):
-    print('Formatting')
-    fig.update_xaxes(showline=True,
-                     ticks="outside", 
-                     tickwidth=1, 
-                     ticklen=7,
-                     tickcolor="rgba(255,255,255,1)"
-                    )
-    fig.update_yaxes(showline=True, 
-                     range = [min_range - (min_range*.1),
-                              max_range+(min_range*.1)], 
-                     ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(255,255,255,1)"
-                    )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,.1)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="white",
+            modebar={
+                "bgcolor": "rgba(0,0,0,0)", 
+                "color": "rgba(1,0,0,0)"
+            }
+    )
+    
+    fig.update_xaxes(
+        showgrid=False,
+        showline=True,
+        ticks="outside", 
+        tickwidth=1, 
+        ticklen=7,
+        tickcolor="rgba(255,255,255,1)"
+    )
+    fig.update_yaxes(
+        showgrid=False, 
+        showline=True, 
+        range = [
+            min_range - (min_range*.1),
+            max_range+(min_range*.1)
+        ], 
+        ticks="outside", 
+        tickwidth=1,
+        ticklen=6, 
+        tickcolor="rgba(255,255,255,1)"
+    )
     return fig
 
 
+# Build Model Visualizations
+####################################
+
+
 def build_polynomial_model(model_data):
+    """ This function creates a visualization for a polynomial regression model. """
         
     target = 'MedianHousePrice' #This is assumed in the generator
     
+    # This data was returned from a generator yield on the MODEL_LAYOUT page.
     i, predictions, original = model_data
     
-    original['predictor'] = original['predictor'].astype('int')
-    original[target] = original[target].astype('float')
+    # These were needed for the Median Income, but possibly not for the others.
+    # original['predictor'] = original['predictor'].astype('int')
+    # original[target] = original[target].astype('float')
     
+    # Create the first trace
+    fig1 = px.line(
+        x = original['predictor'],
+        y = original[target]
+    )
     
-    fig1 = px.line(x = original['predictor'],
-                    y = original[target],
-                    )
+    # Create the second trace
+    fig2 = px.line(
+        x=predictions['x_var'],
+        y=predictions['predictions']
+    )
+    
     fig1.update_traces(line=dict(color='black', width=3))
-    
-    fig2 = px.line(x=predictions['x_var'],
-                    y=predictions['predictions'])
-    fig2.update_traces(line=dict(color='#ED215C', width=3, dash='dash'))
+    fig2.update_traces(line=dict(color='white', width=3, dash='dash'))
 
+    # Combine the traces into a single figure
     final_fig = go.Figure(data = fig1.data + fig2.data)
+    
+    # Add and format the title
     final_fig.update_layout(
         title=dict(
             text=f'<b>{target} | Degrees: {i}<b>',
             font=dict(size=20),
-        ),
-        paper_bgcolor="rgba(0,0,0,.1)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        modebar={
-            "bgcolor": "rgba(0,0,0,0)", 
-            "color": "rgba(1,0,0,0)"
-        }
+        )
     )
-    final_fig.update_xaxes(showgrid=False)
-    final_fig.update_yaxes(showgrid=False)
-    
+
     min_range = original[target].min() 
     max_range = original[target].max()
 
-    
-    final_fig = format_active_graph_visual(final_fig, min_range, max_range)
+    # Send the figure out for formatting.
+    final_fig = format_active_graph_visual(
+        final_fig, min_range, max_range
+    )
     return final_fig
 
 
 
-def build_fig_one(yearly_income):
-
-    print("\nBuilding Median Income by Age Group chart.")
+def income_visual_builder(yearly_income):
+    full_df = next(yearly_income)
+    
+    pass
+def build_fig_one(yearly_income, target_fips = '34001'):
+    start = time.perf_counter()
     full, df = next(yearly_income)
+    min_range = 0
+    max_range = full[(full.FIPS == target_fips)]['MedianIncome'].max()
     full = None
     # Filter by a county
-    df = df[(df.FIPS == "34001")]
+    df = df[(df.FIPS == target_fips)]
     fig = px.bar(x=df["Year"], y=df["MedianIncome"], color=df["AgeGroup"], barmode="group")
     fig.update_layout(
         title=dict(
             text=f"<b>Median Income by Age Group for {df.FIPS.tolist()[0]}<b>",
             font=dict(size=20),
         ),
-        paper_bgcolor="rgba(0,0,0,.2)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,0)"},
     )
-    fig.update_xaxes(ticks="outside", tickwidth=1, ticklen=7, tickcolor="rgba(0,0,0,0)")
-    fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
-    print("Finished Building Median Income by Age Group Chart\n")
+    fig = format_active_graph_visual(fig, min_range, max_range)
+    print(f'{round(time.perf_counter() - start,3)} seconds to build fig_one')
     return fig
 
 
 def build_fig_two():
-    fig = px.bar()
+    fig = px.line()
     fig.update_layout(
         title=dict(text="<b>Chart 2<b>", font=dict(size=20)),
         paper_bgcolor="rgba(0,0,0,.1)",
