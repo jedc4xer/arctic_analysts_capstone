@@ -66,34 +66,31 @@ PAGE_TEXT_CONTENT_6 = """
 A county will be considered affordable if a household making the median income will be able to afford a home that is a median priced home in that county.
 """
 
-list_group = dbc.ListGroup(
-    [
-        dbc.ListGroupItem(PAGE_TEXT_CONTENT_3a),
-        dbc.ListGroupItem(PAGE_TEXT_CONTENT_3b),
-        dbc.ListGroupItem(PAGE_TEXT_CONTENT_3c),
-        dbc.ListGroupItem(PAGE_TEXT_CONTENT_3d),   
-    ]                         
-),
+list_group = (
+    dbc.ListGroup(
+        [
+            dbc.ListGroupItem(PAGE_TEXT_CONTENT_3a),
+            dbc.ListGroupItem(PAGE_TEXT_CONTENT_3b),
+            dbc.ListGroupItem(PAGE_TEXT_CONTENT_3c),
+            dbc.ListGroupItem(PAGE_TEXT_CONTENT_3d),
+        ]
+    ),
+)
 
 HOMEPAGE_LAYOUT = html.Div(
     [
-        #dbc.Row(html.H1("New Jersey Housing Analysis"), className="text-center"),
+        # dbc.Row(html.H1("New Jersey Housing Analysis"), className="text-center"),
         dbc.Row(
             [
-                dbc.Col(width = '3'),
+                dbc.Col(width="3"),
                 dbc.Col(
                     [
-                        dbc.Row(
-                        html.H3("Analysis Summary"),
-                        className="text-center",
-                        ),
+                        dbc.Row(html.H3("Analysis Summary"), className="text-center",),
                         dbc.Row(html.P(PAGE_TEXT_CONTENT_1), className="text-left"),
                         dbc.Row(html.P(PAGE_TEXT_CONTENT_2), className="text-left"),
                         dbc.Row(
                             [
-                                dbc.Col(
-                                    html.P(list_group, style={"padding": "10px"}),
-                                ),
+                                dbc.Col(html.P(list_group, style={"padding": "10px"}),),
                                 dbc.Col(),
                             ]
                         ),
@@ -102,9 +99,9 @@ HOMEPAGE_LAYOUT = html.Div(
                         dbc.Row(html.P(PAGE_TEXT_CONTENT_6), className="text-left"),
                     ]
                 ),
-                dbc.Col(width = '3'),
+                dbc.Col(width="3"),
             ],
-            #className="h-25",#
-        ),  
+            # className="h-25",#
+        ),
     ]
 )
