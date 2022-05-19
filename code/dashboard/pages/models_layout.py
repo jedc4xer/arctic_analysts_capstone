@@ -2,6 +2,7 @@ import data_control as data_con
 import visual_control as viz
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, callback
+from dash.exceptions import PreventUpdate
 
 
 # try:
@@ -17,7 +18,20 @@ except:
     
 MODEL_LAYOUT = html.Div(
     [
-        dbc.Row(html.H1("Machine Learning Models Page"), className="text-center"),
+        # dbc.Row(html.H1("Machine Learning Models Page"), className="text-center"),
+        dbc.Row(
+            [
+                dbc.Col(
+                    dcc.Dropdown(['Median House Price', 'Median Income','New Buildings', 'Mortgage Rate'],
+                                 placeholder='Select a feature',
+                                 style={'margin-right': '12em', 'color': 'black', 'border': '1px solidgrey'})
+                ),
+                dbc.Col(),
+                dbc.Col(),
+                dbc.Col(),
+            ]
+        ),
+            
         dcc.Interval(id="model_intervals", interval= .2 * 1000, n_intervals=0),
         dbc.Row(
             [

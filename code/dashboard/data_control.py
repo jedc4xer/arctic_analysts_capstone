@@ -222,9 +222,9 @@ def income_data_generator(current_state = 'OFF'):
     while True:
         filtered_years = []
         for year in sorted(years):
-            print(year)
             filtered_years.append(year)
-            filtered = income_df[(income_df.Year.isin(filtered_years))]
+            filtered = income_df.copy()
+            filtered.loc[(~filtered.Year.isin(filtered_years)), "MedianIncome"] = 0
             filtered = filtered.sort_values(by = ['Year', 'MedianIncome'], ascending = [True, False])
             yield income_df, filtered
             
@@ -285,8 +285,3 @@ def poly_generator(target = 'MedianHousePrice'):
             if i == len(models):
                 best = True
             yield item
-        # for i in range(1,25):
-        #     yield item
-            
-            
-# ValueError: All arguments should have the same length. The length of argument `wide_variable_0` is 1, whereas the length of  previously-processed arguments ['x'] is 180

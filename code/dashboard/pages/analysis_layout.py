@@ -43,7 +43,7 @@ ANALYSIS_LAYOUT = html.Div(
             [
                 dbc.Col(
                     [
-                        dcc.Interval(id="graph_1", interval=.5 * 1000, n_intervals=0),
+                        dcc.Interval(id="graph_1", interval=1 * 1000, n_intervals=0),
                         dcc.Graph(
                             id="analysis_page_first",
                             #figure=fig1,
