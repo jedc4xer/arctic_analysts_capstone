@@ -3,4 +3,23 @@ Dev10 Capstone Project Repository
 
 Introduction:
 
-    This repository holds the project files for our Dev10 Capstone Project.
+    In our capstone project for the Dev10 Data Professional Program, we are attempting to predict the affordability of the median priced home in New Jersey given a selection of conditions.
+    - Median Income
+    - Median Home Price
+    - Permits for New Housing Construction
+    - Mortgage Rates
+    
+Repository Layout:
+
+    - Directories
+        - Project Specifications/
+            - NapkinDrawings/
+                - Napkin Drawings
+            - Project Specification Files
+        - code/
+            - Azure_SQL/
+                - Database Creation Code
+            - dashboard/
+                - code files
+            - ml_models/
+                - Jupyter Notebooks with model testing
