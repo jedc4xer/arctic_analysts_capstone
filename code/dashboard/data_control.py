@@ -119,6 +119,8 @@ def join_tables(all_df):
     )
     # Now has 20727 rows
     print(master_table.shape[0])
+
+    master_table.loc[(master_table.MedianIncome < 0), "MedianIncome"] = None
     return master_table
 
 
