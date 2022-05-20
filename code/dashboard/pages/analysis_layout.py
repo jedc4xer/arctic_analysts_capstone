@@ -9,46 +9,33 @@ from config import locale_options
 try:
     yearly_income = data_con.income_data_generator()
 except Exception as E:
-    print("Error", E)
+    print("Analysis Layout: Exception 1A", E)
 
-
+    
 def analysis_viz_builders():
-    # function calls for visualization builders
-    # Starter for initial dash populating
-    fig1 = html.H2("Loading Charts")
+    # Any static graphs that need to be build on first load.
+    return charts
 
-    fig2 = html.H2("Loading Charts")
-
-    fig3 = html.H2("Loading Charts")
-
-    # fig3 = viz.build_fig_three(data_dict["median_income"])
-
-    # fig4 = viz.build_income_line_chart(data_con.income_data())
-
-    fig4 = html.H2("Loading Charts")
-
-    return fig1, fig2, fig3, fig4
+# charts = analysis_viz_builders()
 
 
-# fig1, fig2, fig3, fig4 = analysis_viz_builders()
-
+# LAYOUT
+########################################
 
 # This code structures the layout for this page.
-
 ANALYSIS_LAYOUT = html.Div(
     [
         # dcc.Interval(id="analysis_page_interval", interval=5 * 1000, n_intervals=0),
-        # dbc.Row(html.H1("US Housing Analysis"), className="text-center"),
         dbc.Row(
             [
                 dbc.Col(
                     dcc.Dropdown(
-                        id="feature_dropdown",
+                        id="locale_dropdown",
                         options=[
                             {"label": locale_options[i], "value": i}
                             for i in locale_options
                         ],
-                        placeholder="Not Yet Functional",
+                        placeholder="Choose a Location",
                         style={
                             "margin-right": "12em",
                             "color": "black",
@@ -66,7 +53,7 @@ ANALYSIS_LAYOUT = html.Div(
             [
                 dbc.Col(
                     [
-                        dcc.Interval(id="graph_1", interval=1 * 1000, n_intervals=0),
+                        dcc.Interval(id="graph_1", interval=.5 * 1000, n_intervals=0),
                         dcc.Graph(
                             id="analysis_page_first",
                             # figure=fig1,
@@ -106,7 +93,7 @@ ANALYSIS_LAYOUT = html.Div(
         ),
         dbc.Row(
             [
-                dcc.Interval(id="graph_2", interval=0.5 * 1000, n_intervals=0),
+                dcc.Interval(id="graph_2", interval=5 * 1000, n_intervals=0),
                 dcc.Graph(
                     id="median_income_chart",
                     # figure=fig4,
@@ -123,14 +110,21 @@ ANALYSIS_LAYOUT = html.Div(
     ]
 )
 
-
 @callback(
     Output("analysis_page_first", "figure"),
     Output("median_income_chart", "figure"),
     Input("graph_1", "n_intervals"),
+    Input("locale_dropdown", "value")
 )
-def analysis_viz_builders(n):
-    fig1, fig2 = viz.income_visual_master(yearly_income)
+def analysis_viz_builders(n, locale_value):
+    if locale_value is None:
+        locale_value = '34001'
+        
+    try:
+        fig1, fig2 = viz.income_visual_master(yearly_income, locale_value)
+    except Exception as E:
+        print(E)
+        
     return fig1, fig2
 
 
