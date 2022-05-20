@@ -24,55 +24,46 @@ MAP_LAYOUT = html.Div(
             [
                 dbc.Col(
                     dcc.Dropdown(
-                        id='base_map_style',
-                         options = [
-                             {"label": base_maps[i], "value": i}
-                             for i in base_maps
-                         ],
+                        id="base_map_style",
+                        options=[
+                            {"label": base_maps[i], "value": i} for i in base_maps
+                        ],
                         placeholder="Change the Map Style",
-                        style={
-                            "color": "black"
-                        }
-                    ),width=2,
+                        style={"color": "black"},
+                    ),
+                    width=2,
                 ),
-                
                 dbc.Col(
                     dcc.Dropdown(
-                        id='animation_dropdown',
-                         options = [
-                             {"label": 'Static Map', "value": 'static'},
-                             {"label": 'Animated Map', 'value': 'animated'}
-                         ],
+                        id="animation_dropdown",
+                        options=[
+                            {"label": "Static Map", "value": "static"},
+                            {"label": "Animated Map", "value": "animated"},
+                        ],
                         placeholder="Modify Map",
-                        style={
-                            "color": "black"
-                        }
-                    ),width=2,
+                        style={"color": "black"},
+                    ),
+                    width=2,
                 ),
                 dbc.Col(
                     dcc.Dropdown(
-                        id='age_dropdown',
-                         options = [
-                             {"label": age_groups[i], "value": i}
-                             for i in age_groups
-                         ],
+                        id="age_dropdown",
+                        options=[
+                            {"label": age_groups[i], "value": i} for i in age_groups
+                        ],
                         placeholder="Age",
-                        style={
-                            "color": "black"
-                        }
-                    ),width=1,
+                        style={"color": "black"},
+                    ),
+                    width=1,
                 ),
                 dbc.Col(
                     dcc.Dropdown(
-                        id='year_dropdown',
-                         options = [
-                             {"label": 'Not Implemented', "value": 'None'}
-                         ],
+                        id="year_dropdown",
+                        options=[{"label": "Not Implemented", "value": "None"}],
                         placeholder="Year",
-                        style={
-                            "color": "black"
-                        }
-                    ),width=1,
+                        style={"color": "black"},
+                    ),
+                    width=1,
                 ),
                 dbc.Col(width=4),
                 dbc.Col(width=4),
@@ -83,19 +74,20 @@ MAP_LAYOUT = html.Div(
                 dbc.Col(
                     dcc.Graph(
                         id="map1",
-                        #figure=map1,
+                        # figure=map1,
                         style={
                             "padding": "2px",
                             "float": "left",
                             "width": "2",
                             "height": "80vh",
                         },
+                        config={"displayModeBar": False},
                     ),
                 ),
                 dbc.Col(
                     dcc.Graph(
                         id="map_page_map_2",
-                        #figure=mapfig2,
+                        # figure=mapfig2,
                         style={
                             "padding": "5px",
                             "float": "right",
@@ -110,25 +102,26 @@ MAP_LAYOUT = html.Div(
     className="h-50",
 )
 
+
 @callback(
     Output("map1", "figure"),
-    Input("base_map_style", 'value'),
-    Input("age_dropdown", 'value'),
-    Input("animation_dropdown", 'value')
+    Input("base_map_style", "value"),
+    Input("age_dropdown", "value"),
+    Input("animation_dropdown", "value"),
 )
 def modify_map(base_map_style, age_group, animate):
     if base_map_style is None:
         base_map_style = "open-street-map"
-        
+
     if age_group is None:
-        age_group = '25-44'
-        
+        age_group = "25-44"
+
     if animate is None:
-        animate = 'static'
-    
-    
+        animate = "static"
+
     map1 = viz.map_builder(base_map_style, age_group, animate)
     return map1
+
 
 # try:
 #     print(n)

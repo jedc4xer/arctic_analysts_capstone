@@ -42,17 +42,17 @@ locale_options = {
 }
 
 age_groups = {
-    'overall': "Overall",
-    'under-25': "Under 25",
-    '25-44': "25 to 44",
-    '45-64': "45 to 64",
-    '65-plus': "65 +"
+    "overall": "Overall",
+    "under-25": "Under 25",
+    "25-44": "25 to 44",
+    "45-64": "45 to 64",
+    "65-plus": "65 +",
 }
 
 base_maps = {
     "open-street-map": "Street Map",
-    "carto-positron": "Positron", 
-    "carto-darkmatter": "Dark", 
+    "carto-positron": "Positron",
+    "carto-darkmatter": "Dark",
     "stamen-terrain": "Terrain",
     "stamen-toner": "Toner",
     "stamen-watercolor": "Watercolor",
