@@ -1,6 +1,7 @@
 import json
 import time
 import functools
+import pandas as pd
 import datetime as dt
 import plotly.express as px
 import data_control as data_con
@@ -47,6 +48,7 @@ def format_active_graph_visual(fig, min_range, max_range):
         showgrid=False,
         showline=True,
         range=[min_range - (min_range * 0.1), max_range + (min_range * 0.1)],
+        #range = [0,400000],
         ticks="outside",
         tickwidth=1,
         ticklen=6,
@@ -63,26 +65,44 @@ def build_polynomial_model(model_data, target, locale, best):
     """ This function creates a visualization for a polynomial regression model. """
 
     # This data was returned from a generator yield on the MODEL_LAYOUT page.
-    i, predictions, original = model_data
+    # It is yielded from the poly_generator in the data_control.py file
+    # It is received in a list and unpacked in the code below.
+    try:
+        i, predictions, original, futures = model_data
+    except Exception as E:
+        print('Error in build_polynomial_model', E)
+    
+    # Get the dates for the predictions
+    freq = 'M' if target != 'MedianIncome' else 'Y'
+    num_periods = futures.shape[0]
+    fixed_dates = data_con.get_date_range(original['date'].dropna().tolist()[-1], num_periods, freq)
+    
+    # Add the prediction dates to the prediction df
+    futures['date'] = fixed_dates
+    
+    #combine all the dataframes
+    data_for_plotting = pd.merge(original, predictions, left_on = 'predictor', right_on = 'x_var', how = 'outer')
+    data_for_plotting = pd.merge(data_for_plotting, futures, left_on = ['predictor','date'], right_on = ['predictor','date'], how = 'outer')
+    data_for_plotting['date'] = pd.to_datetime(data_for_plotting['date'])
 
-    # These were needed for the Median Income, but possibly not for the others.
-    # original['predictor'] = original['predictor'].astype('int')
-    # original[target] = original[target].astype('float')
-
+    
     # Create the first trace
-    fig1 = px.line(x=original["date"], y=original[target])
+    fig1 = px.line(x=data_for_plotting["date"], y=data_for_plotting[target])
 
     # Create the second trace
-    fig2 = px.line(x=original["date"], y=predictions["predictions"])
+    fig2 = px.line(x=data_for_plotting["date"], y=data_for_plotting["predictions"])
+    
+    fig3 = px.line(x=data_for_plotting["date"], y=data_for_plotting['futures'])
 
     fig1.update_traces(line=dict(color="black", width=3))
     fig2.update_traces(line=dict(color="white", width=3, dash="dash"))
+    fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
 
     # Combine the traces into a single figure
-    final_fig = go.Figure(data=fig1.data + fig2.data)
+    final_fig = go.Figure(data=fig1.data + fig2.data + fig3.data)
 
     if best:
-        indicate_best = "| Lowest RMSE"
+        indicate_best = "| Lowest RMSE | (Animation Paused)"
     else:
         indicate_best = ""
 
@@ -101,20 +121,22 @@ def build_polynomial_model(model_data, target, locale, best):
     return final_fig
 
 
-def income_visual_master(yearly_income, target_fips="34001"):
+def income_visual_master(yearly_income, target_fips):
+
     full, df = next(yearly_income)
     min_range = 0
     max_range = full[(full.FIPS == target_fips)]["MedianIncome"].max()
     full = None
     df = df[(df.FIPS == target_fips)]
 
-    args = [min_range, max_range]
+    args = [min_range, max_range, locale_options[target_fips]]
     fig1, fig1_time = build_fig_one(df, args)
     fig2, fig2_time = build_fig_two(df, args)
 
-    print(
-        f"{fig1_time} seconds to build line chart | {fig2_time} seconds to build bottom chart"
-    )
+    if (fig1_time > .2 or fig2_time > .2):
+        print(
+            f"{fig1_time} seconds to build line chart | {fig2_time} seconds to build bottom chart"
+        )
     return fig1, fig2
 
 
@@ -131,9 +153,9 @@ def build_fig_one(df, args):
 
     fig.update_traces(line=dict(width=3))
 
-    min_range, max_range = args
+    min_range, max_range, locale = args 
     fig.update_layout(
-        title=dict(text="<b>Chart 2<b>", font=dict(size=20)),
+        title=dict(text=f"<b>Median Income by Age Group | {locale}<b>", font=dict(size=20)),
         paper_bgcolor="rgba(0,0,0,.1)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="white",
@@ -155,10 +177,10 @@ def build_fig_two(df, args):
         color_discrete_map=color_map,
     )
 
-    min_range, max_range = args
+    min_range, max_range, locale = args
     fig.update_layout(
         title=dict(
-            text=f"<b>Median Income by Age Group for {df.FIPS.tolist()[0]}<b>",
+            text=f"<b>Median Income by Age Group for {locale}<b>",
             font=dict(size=20),
         ),
     )
@@ -219,68 +241,8 @@ def build_income_line_chart(income_df):
 
     return fig
 
-
-def build_static_map_one():
-
-    df = data_con.age_filtered_data()
-    df = df[(df.date == "2022-01-15")]
-    print("Building Median Home Price Choropleth Map")
-
-    # fig = px.choropleth_mapbox(df,
-    #                            geojson=counties,
-    #                            color="MedianHousePrice",
-    #                            locations="FIPS",
-    #                            featureidkey="properties.FIPSSTCO",
-    #                            center={'lat': 40.301284, 'lon': -74.421983},
-    #                            mapbox_style="carto-positron",
-    #                            zoom=7,
-    #                           animation_frame="Year"
-    #                           )
-
-    fig = px.choropleth(
-        df,
-        geojson=counties,
-        color="MedianHousePrice",
-        locations="FIPS",
-        featureidkey="properties.FIPSSTCO",
-        # animation_frame="date",
-    )
-
-    fig.update_geos(
-        fitbounds="locations",
-        visible=False,
-        bgcolor="rgba(0,0,0,0)",
-        resolution=50,
-        landcolor="lightgrey",
-        subunitcolor="black",
-    )
-
-    fig.update_layout(
-        coloraxis_showscale=False,
-        title=dict(text=f"<b>{'Median Home Prices'}<b>", font=dict(size=20)),
-        margin={"r": 0, "t": 0, "l": 0, "b": 0, "autoexpand": True},
-        # height=1200,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
-    )
-    fig.update_layout(
-        title_y=1, title_x=0.25, title_font_size=18, legend=dict(x=0.9, y=0.4)
-    )
-
-    print("Finished Building Median Home Price Choropleth Map")
-    return fig
-
-
-@functools.lru_cache()
-def build_static_map_two():
-
-    df = data_con.income_data()
-    df = df.sort_values(by="Year")
-    df = df[(df.Year == 2019)]
-    print("Building Median Income Choropleth Map")
-
+def build_animated_map(df, base_map_style):
+    print('Building Animated Map')
     fig = px.choropleth_mapbox(
         df,
         geojson=counties,
@@ -288,40 +250,130 @@ def build_static_map_two():
         locations="FIPS",
         featureidkey="properties.FIPSSTCO",
         center={"lat": 40.15, "lon": -74.421983},
-        mapbox_style="carto-positron",
+        mapbox_style=base_map_style,
         zoom=6.5,
+        opacity=.8,
+        animation_frame="Year",
+    )
+    return fig
+
+def build_static_map(df, base_map_style):
+    print('Building Static Map')
+    fig = px.choropleth_mapbox(
+        df,
+        geojson=counties,
+        color="MedianIncome",
+        locations="FIPS",
+        featureidkey="properties.FIPSSTCO",
+        center={"lat": 40.15, "lon": -74.421983},
+        mapbox_style=base_map_style,
+        zoom=6.5,
+        opacity=.8,
         # animation_frame="Year",
     )
+    return fig
 
-    #     fig = px.choropleth(df,
-    #                        geojson=counties,
-    #                        color="MedianHousePrice",
-    #                         locations="FIPS",
-    #                         featureidkey="properties.FIPSSTCO",
-    #                         animation_frame="date"
-    #                        )
 
-    #     fig.update_geos(fitbounds="locations",
-    #                     visible=False,
-    #                    bgcolor="rgba(0,0,0,0)",
-    #                     resolution=50,
-    #                     landcolor="lightgrey",
-    #                     subunitcolor="black",
-    #                    )
+def map_builder(base_map_style, age_group, animate):
 
+    df = data_con.income_data()
+    
+    df = df.drop(columns = ['Month', 'MedianHousePrice'])
+    print(animate)
+    if animate == 'animated':
+        df = df[(df.AgeGroup == age_group)]
+        df.drop_duplicates(inplace = True)
+        df = df.sort_values(by="Year")
+        
+        fig = build_animated_map(df, base_map_style)
+    else:
+        df = df[(df.Year == 2019) & (df.AgeGroup == age_group)]
+        df = df.drop_duplicates()
+        fig = build_static_map(df, base_map_style)
+    
+    # fig = px.choropleth_mapbox(
+    #     df,
+    #     geojson=counties,
+    #     color="MedianIncome",
+    #     locations="FIPS",
+    #     featureidkey="properties.FIPSSTCO",
+    #     center={"lat": 40.15, "lon": -74.421983},
+    #     mapbox_style=base_map_style,
+    #     zoom=6.5,
+    #     opacity=.8,
+    #     # animation_frame="Year",
+    # )
+    
     fig.update_layout(
         coloraxis_showscale=False,
-        title=dict(text=f"<b>{'Median Income'}<b>", font=dict(size=20)),
+        title=dict(text=f"<b>{'Median Income'}<b>", font=dict(size=28)),
         margin={"r": 0, "t": 0, "l": 0, "b": 0, "autoexpand": True},
-        # height=1200,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="black",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
     )
     fig.update_layout(
-        title_y=1, title_x=0.25, title_font_size=18, legend=dict(x=0.9, y=0.4)
+        title_y=.96, 
+        title_x=0.05, 
+        legend=dict(x=0.9, y=0.4),
+        
     )
 
     print("Finished Building Median Income Choropleth Map")
     return fig
+
+
+# Possible Trash
+##########################################33
+
+# def build_static_map_one():
+
+#     df = data_con.age_filtered_data()
+#     print("Building Median Home Price Choropleth Map")
+
+#     fig = px.choropleth(
+#         df,
+#         geojson=counties,
+#         color="MedianHousePrice",
+#         locations="FIPS",
+#         featureidkey="properties.FIPSSTCO",
+#         #animation_frame="date",
+#     )
+
+#     fig.update_geos(
+#         fitbounds="locations",
+#         visible=False,
+#         bgcolor="rgba(0,0,0,0)",
+#         resolution=50,
+#         landcolor="lightgrey",
+#         subunitcolor="black",
+#     )
+
+#     fig.update_layout(
+#         coloraxis_showscale=True,
+#         title=dict(text=f"<b>{'Median Home Prices'}<b>", font=dict(size=20)),
+#         margin={"r": 0, "t": 0, "l": 0, "b": 0},#, "autoexpand": True},
+#         height=800,
+#         paper_bgcolor="rgba(0,0,0,0)",
+#         plot_bgcolor="rgba(0,0,0,0)",
+#         font_color="white",
+#         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
+#     )
+#     fig.update_layout(
+#         title_y=1, 
+#         title_x=0.25, 
+#         title_font_size=18,
+#         legend=dict(x=0.6, y=0.4),
+#         coloraxis_colorbar=dict(
+#             title="Number of Bills per Cell",
+#             thicknessmode="pixels", thickness=25,
+#             lenmode="fraction", len=.5,
+#             yanchor="top", y=.75,
+#             ticks="outside", ticksuffix=" bills",
+#             #dtick=100000
+#         )
+#     )
+
+#     print("Finished Building Median Home Price Choropleth Map")
+#     return fig

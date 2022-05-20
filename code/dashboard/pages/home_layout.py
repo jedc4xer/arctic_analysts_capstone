@@ -42,16 +42,25 @@ THEME = THEMES[__current_theme]
 
 PAGE_TEXT_CONTENT_1 = """
 Home ownership is a goal of many Americans, and recent years have seen the price of homes increase rapidly.
-Our question, given a select group of conditions, to what extent can we predict near term affordability of homes
-for the typical American Household. We are specifically focusing on counties in the state of New Jersey. 
+In this analysis, we are determining to what extent we can predict the near-term affordability of homes for 
+the typical American Household (making the Median Income for their region) using a select group of conditions.
+
+We are specifically focusing on counties in the state of New Jersey. 
 """
 
-PAGE_TEXT_CONTENT_2 = "The factors that we are using to inform our prediction are:"
+PAGE_TEXT_CONTENT_2 = "The factors that we are using to inform our predictions are:"
 
 PAGE_TEXT_CONTENT_3a = "   - Median Income"
 PAGE_TEXT_CONTENT_3b = "   - Construction of New Housing"
 PAGE_TEXT_CONTENT_3c = "   - Average Mortgage Interest Rate"
 PAGE_TEXT_CONTENT_3d = "   - Median House Prices"
+
+LIST = """
+* Median Income
+* New Housing Permits
+* Average Mortgage Interest Rate
+* Median House Prices
+"""
 
 PAGE_TEXT_CONTENT_4 = """
 Our prediction will involve forecasting the income, new housing, mortgage interest rate, and median house prices for all counties, and then taking those results and classifying each county as affordable or not affordable.
@@ -90,7 +99,7 @@ HOMEPAGE_LAYOUT = html.Div(
                         dbc.Row(html.P(PAGE_TEXT_CONTENT_2), className="text-left"),
                         dbc.Row(
                             [
-                                dbc.Col(html.P(list_group, style={"padding": "10px"}),),
+                                dbc.Col(dcc.Markdown(LIST, style={"padding": "10px"}),),
                                 dbc.Col(),
                             ]
                         ),

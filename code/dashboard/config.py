@@ -41,6 +41,23 @@ locale_options = {
     "34041": "Warren County",
 }
 
+age_groups = {
+    'overall': "Overall",
+    'under-25': "Under 25",
+    '25-44': "25 to 44",
+    '45-64': "45 to 64",
+    '65-plus': "65 +"
+}
+
+base_maps = {
+    "open-street-map": "Street Map",
+    "carto-positron": "Positron", 
+    "carto-darkmatter": "Dark", 
+    "stamen-terrain": "Terrain",
+    "stamen-toner": "Toner",
+    "stamen-watercolor": "Watercolor",
+}
+
 with open("shapefiles/County_Boundaries_of_NJ.json") as file:
     counties = json.load(file)
     file.close()
