@@ -96,14 +96,24 @@ def build_polynomial_model(model_data, target, locale, best):
     data_for_plotting["date"] = pd.to_datetime(data_for_plotting["date"])
 
     # Create the first trace
-    fig1 = px.line(x=data_for_plotting["date"], y=data_for_plotting[target])
+    if target == "MedianIncome":
+        fig1 = px.scatter(x=data_for_plotting["date"], y=data_for_plotting[target])
+        fig1.update_traces(
+            mode="markers",
+            marker_line_width=2,
+            marker_size=15,
+            marker_color="rgba(0,0,255,.3)",
+        )
+
+    else:
+        fig1 = px.line(x=data_for_plotting["date"], y=data_for_plotting[target])
+        fig1.update_traces(line=dict(color="black", width=3))
 
     # Create the second trace
     fig2 = px.line(x=data_for_plotting["date"], y=data_for_plotting["predictions"])
 
     fig3 = px.line(x=data_for_plotting["date"], y=data_for_plotting["futures"])
 
-    fig1.update_traces(line=dict(color="black", width=3))
     fig2.update_traces(line=dict(color="white", width=3, dash="dash"))
     fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
 
@@ -271,8 +281,6 @@ def format_map_menu(fig):
     fig["layout"]["sliders"][0]["bordercolor"] = "rgba(0,0,0,1)"
     fig["layout"]["sliders"][0]["font"]["color"] = "black"
     fig["layout"]["sliders"][0]["font"]["size"] = 14
-
-    print(fig["layout"]["sliders"][0])
 
     # Adding a new button and modifying the behavior.
     fig.update_layout(
