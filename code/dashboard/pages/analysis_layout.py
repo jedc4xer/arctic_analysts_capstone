@@ -11,10 +11,11 @@ try:
 except Exception as E:
     print("Analysis Layout: Exception 1A", E)
 
-    
+
 def analysis_viz_builders():
     # Any static graphs that need to be build on first load.
     return charts
+
 
 # charts = analysis_viz_builders()
 
@@ -53,7 +54,7 @@ ANALYSIS_LAYOUT = html.Div(
             [
                 dbc.Col(
                     [
-                        dcc.Interval(id="graph_1", interval=.5 * 1000, n_intervals=0),
+                        dcc.Interval(id="graph_1", interval=0.5 * 1000, n_intervals=0),
                         dcc.Graph(
                             id="analysis_page_first",
                             # figure=fig1,
@@ -110,21 +111,22 @@ ANALYSIS_LAYOUT = html.Div(
     ]
 )
 
+
 @callback(
     Output("analysis_page_first", "figure"),
     Output("median_income_chart", "figure"),
     Input("graph_1", "n_intervals"),
-    Input("locale_dropdown", "value")
+    Input("locale_dropdown", "value"),
 )
 def analysis_viz_builders(n, locale_value):
     if locale_value is None:
-        locale_value = '34001'
-        
+        locale_value = "34001"
+
     try:
         fig1, fig2 = viz.income_visual_master(yearly_income, locale_value)
     except Exception as E:
         print(E)
-        
+
     return fig1, fig2
 
 

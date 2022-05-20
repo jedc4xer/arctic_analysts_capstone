@@ -59,7 +59,8 @@ def render_page_content(pathname):
             html.Hr(),
             html.H3("Really???"),
             html.H3(f" You are going to have to do better than {pathname}."),
-        ], className="text-center",
+        ],
+        className="text-center",
     )
 
 

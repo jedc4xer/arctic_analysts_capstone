@@ -7,7 +7,7 @@ from config import feature_options, locale_options
 
 start_interval = 5 * 1000
 
-# This starts the generator which returns model results for the 
+# This starts the generator which returns model results for the
 # polynomial visualizations. The generator is located in data_control.py
 poly_gen = None
 poly_gen = data_con.poly_generator()
@@ -86,7 +86,7 @@ MODEL_LAYOUT = html.Div(
 # This is the callback function for the visuals on the model page.
 @callback(
     Output("model_img_1", "figure"),
-    #Output("model_img_2", "figure"),
+    # Output("model_img_2", "figure"),
     Output("model_intervals", "interval"),
     Input("model_intervals", "n_intervals"),
     Input("feature_dropdown", "value"),
@@ -97,11 +97,11 @@ def model_builders(n, feature_value, locale_value, interval):
     # If there is no value picked in the dropdown, assign the default.
     if feature_value is None:
         feature_value = "MedianHousePrice"
-    
+
     # If there is no value picked in the dropdown assign the default.
     if locale_value is None:
         locale_value = "34001"
-        
+
     # Get the next data from the model results
     # and check to see if the result was the best result.
     try:
