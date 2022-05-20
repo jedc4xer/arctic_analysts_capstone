@@ -66,7 +66,7 @@ MODEL_LAYOUT = html.Div(
                     ),
                 ),
                 dbc.Col(
-                    html.H2(" Need to determine which visual to put here... ")
+                    html.H2(" No visual yet. ")
                     # dcc.Graph(
                     #     id="model_img_2",
                     #     style={
