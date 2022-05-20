@@ -378,7 +378,6 @@ def create_and_run_models(X, y, degree):
     ]
 
     pipe = Pipeline(Input)
-
     pipe.fit(X, y)
 
     poly_pred = pipe.predict(X)
