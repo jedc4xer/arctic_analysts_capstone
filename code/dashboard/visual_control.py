@@ -1,10 +1,12 @@
 import json
 import time
 import functools
+import numpy as np
 import pandas as pd
 import datetime as dt
 import plotly.express as px
 import data_control as data_con
+import new_data_control as new_data_con
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from config import counties, feature_options, locale_options
@@ -26,14 +28,16 @@ def map_colors():
     return color_map
 
 
-def format_active_graph_visual(fig, min_range, max_range):
+def format_active_graph_visual(fig, min_range, max_range, units):
     """ This function formats the animated visuals. """
     fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,.1)",
+        paper_bgcolor="rgba(0,0,0,.05)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="white",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(1,0,0,0)"},
         dragmode=False,
+        xaxis_title = None,
+        margin={"r": 5, "t": 50, "l": 0, "b": 15},
     )
 
     fig.update_xaxes(
@@ -43,7 +47,12 @@ def format_active_graph_visual(fig, min_range, max_range):
         tickwidth=1,
         ticklen=7,
         tickcolor="rgba(255,255,255,1)",
+        tickfont = dict(size=14)
     )
+    
+    if units == 'Year':
+        fig.update_xaxes(range=[2000, 2022])
+        
     fig.update_yaxes(
         showgrid=False,
         showline=True,
@@ -53,6 +62,8 @@ def format_active_graph_visual(fig, min_range, max_range):
         tickwidth=1,
         ticklen=6,
         tickcolor="rgba(255,255,255,1)",
+        tickfont = dict(size=14),
+        tickprefix='$'
     )
     return fig
 
@@ -142,15 +153,23 @@ def build_polynomial_model(model_data, target, locale, best):
 
 def income_visual_master(yearly_income, target_fips):
 
-    full, df = next(yearly_income)
+    try:
+        full, df = next(yearly_income)
+    except Exception as E:
+        print(E)
+
     min_range = 0
     max_range = full[(full.FIPS == target_fips)]["MedianIncome"].max()
     full = None
+    
     df = df[(df.FIPS == target_fips)]
-
-    args = [min_range, max_range, locale_options[target_fips]]
-    fig1, fig1_time = build_fig_one(df, args)
-    fig2, fig2_time = build_fig_two(df, args)
+    
+    try:
+        args = [min_range, max_range, locale_options[target_fips]]
+        fig1, fig1_time = build_fig_one(df, args)
+        fig2, fig2_time = build_fig_two(df, args)
+    except Exception as E:
+        print(E)
 
     if fig1_time > 0.2 or fig2_time > 0.2:
         print(
@@ -158,20 +177,57 @@ def income_visual_master(yearly_income, target_fips):
         )
     return fig1, fig2
 
+def home_price_visual_master(home_prices, target_fips):
+
+    full, df = next(home_prices)
+    min_range = 0
+    max_range = full[(full.FIPS == target_fips)]["MedianHousePrice"].max()
+    full = None
+    df = df[(df.FIPS == target_fips)]
+
+    args = [min_range, max_range, locale_options[target_fips]]
+    fig3 = build_fig_three(df, args)
+    
+    # if fig1_time > 0.2 or fig2_time > 0.2:
+    #     print(
+    #         f"{fig1_time} seconds to build line chart | {fig2_time} seconds to build bottom chart"
+    #     )
+    return fig3
+
 
 def build_fig_one(df, args):
     start = time.perf_counter()
-
+    
     color_map = map_colors()
-    fig = px.line(
+    fig = px.scatter(
         x=df["Year"],
         y=df["MedianIncome"],
         color=df["AgeGroup"],
         color_discrete_map=color_map,
     )
+    
+    max_year = df.dropna().Year.max()
+    try:
+        fig.add_vrect(x0 = 2000, x1= 2005,
+                     fillcolor="red", opacity=0.3, line_width=0,
+                     annotation_text="No Data Available", annotation_position="top left")
+    
+      
+        fig.add_vrect(x0 = 2019, x1= 2022,
+                     fillcolor="red", opacity=0.20, line_width=0,
+                     annotation_text="No Data Available", annotation_position="top left")   
+    except Exception as E:
+        print(E)
 
     fig.update_traces(line=dict(width=3))
+    
+    fig.update_traces(
+            mode="markers",
+            marker_line_width=2,
+            marker_size=10,
+        )
 
+    
     min_range, max_range, locale = args
     fig.update_layout(
         title=dict(
@@ -181,14 +237,24 @@ def build_fig_one(df, args):
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="white",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
+        legend=dict(
+            title='',
+            orientation="h",
+            yanchor="top",
+            y=1.10,
+            xanchor="left",
+            x=.18, 
+            bgcolor=("rgba(0,0,0,0)"),
+        ),
     )
-    fig = format_active_graph_visual(fig, min_range, max_range)
+    fig = format_active_graph_visual(fig, min_range, max_range, 'Year')
     build_time = round(time.perf_counter() - start, 3)
     return fig, build_time
 
 
 def build_fig_two(df, args):
     start = time.perf_counter()
+    #df = new_data_con.income_data_generator()
     color_map = map_colors()
     fig = px.bar(
         x=df["Year"],
@@ -204,22 +270,29 @@ def build_fig_two(df, args):
             text=f"<b>Median Income by Age Group for {locale}<b>", font=dict(size=20),
         ),
     )
-    fig = format_active_graph_visual(fig, min_range, max_range)
+    fig = format_active_graph_visual(fig, min_range, max_range, 'Year')
     build_time = round(time.perf_counter() - start, 3)
     return fig, build_time
 
 
-def build_fig_three(income_df):
-    fig = px.bar(income_df, x="year", y="MedianIncome", color="StateFips")
+def build_fig_three(df, args):
+    df = df.drop_duplicates()
+    fig = px.bar(df, x="Date", y="MedianHousePrice", color="FIPS")
     fig.update_layout(
-        title=dict(text="<b>Chart 3<b>", font=dict(size=20)),
         paper_bgcolor="rgba(0,0,0,.5)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="white",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
     )
-    fig.update_xaxes(ticks="outside", tickwidth=1, ticklen=7, tickcolor="rgba(0,0,0,0)")
-    fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
+    min_range, max_range, locale = args
+    fig.update_layout(
+        title=dict(
+            text=f"<b>Median House Price for {locale}<b>", font=dict(size=20),
+        ),
+        showlegend=False
+    )
+    
+    fig = format_active_graph_visual(fig, min_range, max_range, 'Date')
     return fig
 
 
@@ -317,6 +390,9 @@ def format_map_menu(fig):
 
 
 def build_animated_map(df, base_map_style, scale, animate):
+    print(df)
+    customdata = np.stack((df['County'],df['MedianIncome'], df['AgeGroup']),axis = -1)
+    
     fig = px.choropleth_mapbox(
         df,
         geojson=counties,
@@ -330,16 +406,18 @@ def build_animated_map(df, base_map_style, scale, animate):
         animation_frame=animate,
         range_color=scale,
         color_continuous_scale="jet",
+        hover_data=['County','MedianIncome','AgeGroup']
     )
+    fig.update_traces(hovertemplate = '<b>County: %{customdata[0]}</b><br>Median Income: %{customdata[1]:$,}<br>Age Group: %{customdata[2]}')
     return fig
 
 
-def map_builder(base_map_style, age_group, animate, target="MedianIncome"):
+def map_builder(income_data_for_map, base_map_style, age_group, target_year, animate, target="MedianIncome"):
 
-    df = data_con.income_data()
+    df = next(income_data_for_map)
     df = df[(df[target] > 0)]
     df = df.drop(columns=["Month", "MedianHousePrice"])
-
+    
     if animate == "animated":
         print("Building Animated Map")
         df = df[(df.AgeGroup == age_group)]
@@ -351,7 +429,8 @@ def map_builder(base_map_style, age_group, animate, target="MedianIncome"):
         fig = format_map_menu(fig)
     else:
         print("Building Static Map")
-        df = df[(df.Year == 2019) & (df.AgeGroup == age_group)]
+        print(target_year)
+        df = df[(df.Year == target_year) & (df.AgeGroup == age_group)]
         scale = [df[target].min(), df[target].max()]
         df = df.drop_duplicates()
         fig = build_animated_map(df, base_map_style, scale, None)

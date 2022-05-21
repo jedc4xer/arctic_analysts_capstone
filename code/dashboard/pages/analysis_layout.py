@@ -3,11 +3,13 @@ import visual_control as viz
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, callback
 from dash.exceptions import PreventUpdate
+import new_data_control as new_data_con
 import functools
 from config import locale_options
 
 try:
-    yearly_income = data_con.income_data_generator()
+    yearly_income = new_data_con.income_data_generator()
+    home_prices = new_data_con.home_price_data_generator()
 except Exception as E:
     print("Analysis Layout: Exception 1A", E)
 
@@ -54,7 +56,7 @@ ANALYSIS_LAYOUT = html.Div(
             [
                 dbc.Col(
                     [
-                        dcc.Interval(id="graph_1", interval=0.5 * 1000, n_intervals=0),
+                        dcc.Interval(id="graph_1", interval=1 * 1000, n_intervals=0),
                         dcc.Graph(
                             id="analysis_page_first",
                             # figure=fig1,
@@ -63,29 +65,22 @@ ANALYSIS_LAYOUT = html.Div(
                                 "float": "left",
                                 "height": "45vh",
                             },
+                            config={"displayModeBar": False},
                         ),
                     ]
                 ),
                 dbc.Col(
                     [
                         dcc.Graph(
-                            id="analysis_page_second",
+                            id="home_price_chart",
                             # figure=fig2,
                             style={
                                 "padding": "10px",
                                 "float": "right",
                                 "height": "45vh",
                             },
+                            config={"displayModeBar": False},
                         ),
-                        # dcc.Graph(
-                        #     id="analysis_page_third",
-                        #     # figure=fig3,
-                        #     style={
-                        #         "padding": "10px",
-                        #         "float": "right",
-                        #         "height": "20vh",
-                        #     },
-                        # ),
                     ],
                     width="4",
                 ),
@@ -102,8 +97,9 @@ ANALYSIS_LAYOUT = html.Div(
                         "padding": "10px",
                         "float": "right",
                         "width": "12",
-                        "height": "40vh",
+                        "height": "35vh",
                     },
+                    config={"displayModeBar": False},
                 ),
             ],
             className="h-25",
@@ -115,6 +111,7 @@ ANALYSIS_LAYOUT = html.Div(
 @callback(
     Output("analysis_page_first", "figure"),
     Output("median_income_chart", "figure"),
+    Output("home_price_chart", "figure"),
     Input("graph_1", "n_intervals"),
     Input("locale_dropdown", "value"),
 )
@@ -124,10 +121,11 @@ def analysis_viz_builders(n, locale_value):
 
     try:
         fig1, fig2 = viz.income_visual_master(yearly_income, locale_value)
+        fig3 = viz.home_price_visual_master(home_prices, locale_value)
     except Exception as E:
         print(E)
 
-    return fig1, fig2
+    return fig1, fig2, fig3
 
 
 # @callback(
