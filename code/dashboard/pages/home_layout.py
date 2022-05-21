@@ -68,7 +68,7 @@ result in some unrealistic predictions.
 """
 
 PAGE_TEXT_CONTENT_4A = """
-In order to make our predictions, we are forecasting with regression analysis, and then we are taking our forecasts and feeding them into a classification model.
+In order to make our predictions, we are using an ARIMA model for time series predictions. We then do a simple calculation based on the results.
 """
 
 PAGE_TEXT_CONTENT_5 = """

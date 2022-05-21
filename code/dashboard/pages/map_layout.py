@@ -1,3 +1,4 @@
+import new_data_control as new_data_con
 import data_control as data_con
 import visual_control as viz
 import dash_bootstrap_components as dbc
@@ -5,21 +6,15 @@ from dash import Input, Output, dcc, html, callback
 import functools
 from config import base_maps, age_groups
 
-
-# @functools.lru_cache()
-# def get_data_and_visuals():
-
-#     mapfig1 = viz.build_static_map_one()
-#     mapfig2 = viz.build_static_map_two()
-#     return mapfig1, mapfig2
-
-
-# mapfig1, mapfig2 = get_data_and_visuals()
+try:
+    income_data_for_map = new_data_con.income_data()
+except Exception as E:
+    print("Map Layout: Exception 1A", E)
+    
+years = [_ for _ in range(2005, 2020)]
 
 MAP_LAYOUT = html.Div(
     [
-        # Not sure that we really want an interval on this page
-        # dcc.Interval(id="map_page_interval", interval=15 * 1000, n_intervals=0),
         dbc.Row(
             [
                 dbc.Col(
@@ -59,7 +54,7 @@ MAP_LAYOUT = html.Div(
                 dbc.Col(
                     dcc.Dropdown(
                         id="year_dropdown",
-                        options=[{"label": "Not Implemented", "value": "None"}],
+                        options=[{"label": y, "value": y} for y in years],
                         placeholder="Year",
                         style={"color": "black"},
                     ),
@@ -107,9 +102,10 @@ MAP_LAYOUT = html.Div(
     Output("map1", "figure"),
     Input("base_map_style", "value"),
     Input("age_dropdown", "value"),
+    Input("year_dropdown", "value"),
     Input("animation_dropdown", "value"),
 )
-def modify_map(base_map_style, age_group, animate):
+def modify_map(base_map_style, age_group, year, animate):
     if base_map_style is None:
         base_map_style = "open-street-map"
 
@@ -118,34 +114,9 @@ def modify_map(base_map_style, age_group, animate):
 
     if animate is None:
         animate = "static"
+        
+    if year is None:
+        year = 2019
 
-    map1 = viz.map_builder(base_map_style, age_group, animate)
+    map1 = viz.map_builder(income_data_for_map, base_map_style, age_group, year, animate)
     return map1
-
-
-# try:
-#     print(n)
-# except:
-#     print("Starting Generator")
-#     bpm_by_month_generator = data_con.bpm_by_month_map_data("STARTED")
-
-
-# @callback(
-#     Output("map_page_map_1", "figure"),
-#     Output("map_page_map_2", "figure"),
-#     Input("map_page_interval", "n_intervals"),
-# )
-# def get_data_and_visuals(n):
-
-#     mapfig1 = viz.build_static_map_one()
-#     mapfig2 = viz.build_static_map_two()
-#     return mapfig1, mapfig1
-
-# def get_data_and_visuals():
-
-#     mapfig1 = viz.build_static_map_one()
-#     mapfig2 = viz.build_static_map_two()
-#     return mapfig1, mapfig2
-
-
-# mapfig1, mapfig2 = get_data_and_visuals()

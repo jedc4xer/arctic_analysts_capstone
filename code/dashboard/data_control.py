@@ -345,6 +345,31 @@ def income_data_generator(current_state="OFF"):
                 by=["Year", "MedianIncome"], ascending=[True, False]
             )
             yield income_df, filtered
+            
+            
+def home_price_data_generator(current_state="OFF"):
+    """ This is a generator."""
+
+    print("Querying Income Data")
+    query = "SELECT * FROM median_income"
+    income_df = sql_query(query)
+    year_df = sql_query("SELECT * FROM year")
+
+    income_df = pd.merge(income_df, year_df, left_on="YearID", right_on="YearID")
+    income_df = income_df.sort_values(by="MedianIncome", ascending=False)
+    income_df.loc[(income_df.MedianIncome < 0), "MedianIncome"] = None
+
+    years = income_df["Year"].unique().tolist()
+    while True:
+        filtered_years = []
+        for year in sorted(years):
+            filtered_years.append(year)
+            filtered = income_df.copy()
+            filtered.loc[(~filtered.Year.isin(filtered_years)), "MedianIncome"] = None
+            filtered = filtered.sort_values(
+                by=["Year", "MedianIncome"], ascending=[True, False]
+            )
+            yield income_df, filtered
 
 
 # Static Data Return Functions
