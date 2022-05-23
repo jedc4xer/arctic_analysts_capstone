@@ -15,10 +15,10 @@ from pages.analysis_layout import ANALYSIS_LAYOUT
 
 app = dash.Dash(
     __name__,
-    external_stylesheets=[THEME], 
+    external_stylesheets=[THEME],
     suppress_callback_exceptions=True,
-    title="Home Affordability",
-    update_title=None
+    title="Dash",
+    update_title=None,
 )
 
 navbar = NAVIGATION_BAR

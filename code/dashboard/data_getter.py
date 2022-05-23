@@ -70,11 +70,12 @@ def join_tables(all_df):
     master_table.loc[(master_table.MedianIncome < 0), "MedianIncome"] = None
     return master_table
 
+
 def dispatcher():
-    print('Running Dispatcher Queries...')
+    print("Running Dispatcher Queries...")
     all_data = run_queries()
     master_table = join_tables(all_data)
-    print('Data is ready...')
-    
+    print("Data is ready...")
+
     while True:
         yield master_table
