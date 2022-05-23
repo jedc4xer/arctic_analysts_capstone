@@ -10,7 +10,22 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from config import database, user, password, server
 
+## DEPRECATED ##
+################################################
 
+
+# THIS MODULE IS BEING PHASED OUT
+
+# THIS MODULE IS BEING PHASED OUT
+
+
+# THIS MODULE IS BEING PHASED OUT
+
+
+# THIS MODULE IS BEING PHASED OUT
+
+
+### DEPRECATED ###
 # Helper Functions
 ##########################################
 
@@ -345,8 +360,8 @@ def income_data_generator(current_state="OFF"):
                 by=["Year", "MedianIncome"], ascending=[True, False]
             )
             yield income_df, filtered
-            
-            
+
+
 def home_price_data_generator(current_state="OFF"):
     """ This is a generator."""
 

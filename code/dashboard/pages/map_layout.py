@@ -1,5 +1,6 @@
 import new_data_control as new_data_con
-import data_control as data_con
+
+# import data_control as data_con
 import visual_control as viz
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, callback
@@ -10,7 +11,7 @@ try:
     income_data_for_map = new_data_con.income_data()
 except Exception as E:
     print("Map Layout: Exception 1A", E)
-    
+
 years = [_ for _ in range(2005, 2020)]
 
 MAP_LAYOUT = html.Div(
@@ -35,7 +36,7 @@ MAP_LAYOUT = html.Div(
                             {"label": "Static Map", "value": "static"},
                             {"label": "Animated Map", "value": "animated"},
                         ],
-                        placeholder="Modify Map",
+                        placeholder="Change Mode",
                         style={"color": "black"},
                     ),
                     width=2,
@@ -74,7 +75,9 @@ MAP_LAYOUT = html.Div(
                             "padding": "2px",
                             "float": "left",
                             "width": "2",
-                            "height": "80vh",
+                            "height": "75vh",
+                            "margin-top": "10px",
+                            "box-shadow": "1px 2px 4px 5px lightgrey",
                         },
                         config={"displayModeBar": False},
                     ),
@@ -107,16 +110,18 @@ MAP_LAYOUT = html.Div(
 )
 def modify_map(base_map_style, age_group, year, animate):
     if base_map_style is None:
-        base_map_style = "open-street-map"
+        base_map_style = "stamen-watercolor"
 
     if age_group is None:
         age_group = "25-44"
 
     if animate is None:
         animate = "static"
-        
+
     if year is None:
         year = 2019
 
-    map1 = viz.map_builder(income_data_for_map, base_map_style, age_group, year, animate)
+    map1 = viz.map_builder(
+        income_data_for_map, base_map_style, age_group, year, animate
+    )
     return map1

@@ -5,6 +5,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
+import joblib
 
 from warnings import filterwarnings
 filterwarnings('ignore')
@@ -218,11 +219,13 @@ def finalize_results(completed_df, target):
 
 def control_arima(master_table, target, params):
     """ This function contains the meat of the ARIMA Method."""
-    def ARIMA_predict(df, best_col, best_arima, num_periods):
+    def ARIMA_predict(df, best_col, best_arima, num_periods, target, params):
 
         y_train, y_test = train_test_split(df[best_col].dropna(), train_size = .75, shuffle = False)
         model = ARIMA(y_train, order = best_arima)
         fitted = model.fit()
+        file_name = f'model_dump/{target}_{params[0]}_{params[1]}_model.sav'
+        joblib.dump(fitted, file_name)
 
         predictions = fitted.forecast(num_periods, alpha=0.05)
 
@@ -257,7 +260,7 @@ def control_arima(master_table, target, params):
     else:
         prediction_periods = int(filtered_df.shape[0] * .1)
     predictions, y_train, y_test = ARIMA_predict(
-        filtered_df, best_col, best_arima, 10
+        filtered_df, best_col, best_arima, 10, target, params
     )
 
     # Convert returned predictions to dataframe
