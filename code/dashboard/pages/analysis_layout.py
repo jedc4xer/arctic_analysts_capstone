@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 import new_data_control as new_data_con
 from dash.exceptions import PreventUpdate
 from dash import Input, Output, dcc, html, callback
+import time
 
 
 try:
@@ -123,6 +124,7 @@ ANALYSIS_LAYOUT = html.Div(
     Output("home_price_chart", "figure"),
     Input("graph_1", "n_intervals"),
     Input("locale_dropdown", "value"),
+    prevent_initial_call=True
 )
 def analysis_viz_builders(n, locale_value):
 
@@ -133,7 +135,7 @@ def analysis_viz_builders(n, locale_value):
         # fig1, fig2 = viz.income_visual_master(yearly_income, locale_value)
         fig3 = viz.home_price_visual_master(home_prices, locale_value)
     except Exception as E:
-        print(E)
+        return viz.blank()
 
     return fig3
 
@@ -144,10 +146,9 @@ def analysis_viz_builders(n, locale_value):
     Input("locale_dropdown", "value"),
 )
 def update_visual_one(locale):
-    print(locale)
     locale = "34001" if locale is None else locale
-    print(locale)
 
+    time.sleep(1)
     fig, fig1 = viz.income_visual_master(yearly_income, locale)
     return fig, fig1
 
