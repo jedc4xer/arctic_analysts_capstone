@@ -125,6 +125,7 @@ ANALYSIS_LAYOUT = html.Div(
     Input("locale_dropdown", "value"),
 )
 def analysis_viz_builders(n, locale_value):
+
     if locale_value is None:
         locale_value = "34001"
 

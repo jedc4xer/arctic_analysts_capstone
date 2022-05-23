@@ -9,6 +9,8 @@ server = "gen10-data-fundamentals-22-02-sql-server.database.windows.net"
 # New Jersey GEOJSON from https://njogis-newjersey.opendata.arcgis.com/datasets/county-boundaries-of-nj/explore?location=40.273633%2C-72.892608%2C8.33
 # Reshaped with Mapshaper
 
+mode = "normal"  # dark or normal
+
 shadow = "4px 4px 4px 4px lightgrey"
 tight_shadow = "1px 1px 1px 1px lightgrey"
 

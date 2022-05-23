@@ -5,12 +5,13 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 import plotly.express as px
+import arima_model as arima
 
 # import data_control as data_con # Deprecated
 import new_data_control as new_data_con
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from config import counties, feature_options, locale_options, age_groups
+from config import counties, feature_options, locale_options, age_groups, mode
 
 
 # Visual Formatting Functions
@@ -29,17 +30,38 @@ def map_colors():
     return color_map
 
 
-def format_active_graph_visual(fig, min_range=None, max_range=None, units=None):
-    """ This function formats the animated visuals. """
+def format_active_layout(fig):
+    """ This function formats the layout of a figure. """
+    if mode == "normal":
+        paper = "rgba(255,255,255,.95)"
+        plot_bg = "rgba(255,255,255,0)"
+        font_color = "black"
+    elif mode == "dark":
+        paper = "rgba(0,0,0,.95)"
+        plot_bg = "rgba(0,0,0,.95)"
+        font_color = "white"
+
     fig.update_layout(
-        paper_bgcolor="rgba(255,255,255,.95)",
-        plot_bgcolor="rgba(255,255,255,1)",
-        font_color="black",
+        paper_bgcolor=paper,
+        plot_bgcolor=plot_bg,
+        font_color=font_color,
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(1,0,0,0)"},
         dragmode=False,
         xaxis_title=None,
         margin={"r": 8, "t": 50, "l": 5, "b": 15},
     )
+    return fig
+
+
+def format_active_axes(fig, min_range=None, max_range=None, units=None):
+    """ This function formats the axes of a figure. """
+
+    if mode == "dark":
+        tickcolor = "rgba(255,255,255,1)"
+        gridcolor = "white"
+    else:
+        tickcolor = "rgba(0,0,0,1)"
+        gridcolor = "black"
 
     fig.update_xaxes(
         showgrid=False,
@@ -47,8 +69,9 @@ def format_active_graph_visual(fig, min_range=None, max_range=None, units=None):
         ticks="outside",
         tickwidth=1,
         ticklen=7,
-        tickcolor="rgba(0,0,0,1)",
+        tickcolor=tickcolor,
         tickfont=dict(size=14),
+        linecolor=gridcolor,
     )
 
     if units == "Year":
@@ -64,6 +87,7 @@ def format_active_graph_visual(fig, min_range=None, max_range=None, units=None):
         tickcolor="rgba(0,0,0,1)",
         tickfont=dict(size=14),
         tickprefix="$",
+        linecolor=gridcolor,
     )
 
     if min_range is not None and min_range >= 0:
@@ -72,101 +96,20 @@ def format_active_graph_visual(fig, min_range=None, max_range=None, units=None):
         )
     return fig
 
+
 # END VISUAL FORMATTING
-####################################################
-
-
-# Build Model Visualizations
-####################################
-
-
-def build_polynomial_model(model_data, target, locale, best):
-    """ This function creates a visualization for a polynomial regression model. """
-
-    # This data was returned from a generator yield on the MODEL_LAYOUT page.
-    # It is yielded from the poly_generator in the data_control.py file
-    # It is received in a list and unpacked in the code below.
-    try:
-        i, predictions, original, futures = model_data
-    except Exception as E:
-        print("Error in build_polynomial_model", E)
-
-    # Get the dates for the predictions
-    freq = "M" if target != "MedianIncome" else "Y"
-    num_periods = futures.shape[0]
-    fixed_dates = data_con.get_date_range(
-        original["date"].dropna().tolist()[-1], num_periods, freq
-    )
-
-    # Add the prediction dates to the prediction df
-    futures["date"] = fixed_dates
-
-    # combine all the dataframes
-    data_for_plotting = pd.merge(
-        original, predictions, left_on="predictor", right_on="x_var", how="outer"
-    )
-    data_for_plotting = pd.merge(
-        data_for_plotting,
-        futures,
-        left_on=["predictor", "date"],
-        right_on=["predictor", "date"],
-        how="outer",
-    )
-    data_for_plotting["date"] = pd.to_datetime(data_for_plotting["date"])
-
-    # Create the first trace
-    if target == "MedianIncome":
-        fig1 = px.scatter(x=data_for_plotting["date"], y=data_for_plotting[target])
-        fig1.update_traces(
-            mode="markers",
-            marker_line_width=2,
-            marker_size=15,
-            marker_color="rgba(0,0,255,.3)",
-        )
-
-    else:
-        fig1 = px.line(x=data_for_plotting["date"], y=data_for_plotting[target])
-        fig1.update_traces(line=dict(color="black", width=3))
-
-    # Create the second trace
-    fig2 = px.line(x=data_for_plotting["date"], y=data_for_plotting["predictions"])
-
-    fig3 = px.line(x=data_for_plotting["date"], y=data_for_plotting["futures"])
-
-    fig2.update_traces(line=dict(color="white", width=3, dash="dash"))
-    fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
-
-    # Combine the traces into a single figure
-    final_fig = go.Figure(data=fig1.data + fig2.data + fig3.data)
-
-    if best:
-        indicate_best = "| Lowest RMSE | (Animation Paused)"
-    else:
-        indicate_best = ""
-
-    title_string = f"""
-    <b>{feature_options[target]} | Degrees: {i}<br>
-    {locale_options[locale]} {indicate_best}<b>
-    """
-    # Add and format the title
-    final_fig.update_layout(title=dict(text=title_string, font=dict(size=20),))
-
-    min_range = original[target].min()
-    max_range = original[target].max()
-
-    # Send the figure out for formatting.
-    final_fig = format_active_graph_visual(final_fig, min_range, max_range)
-    return final_fig
-
-# END POLYNOMIAL VISUALS
 ####################################################
 
 
 # BLANKS
 #########################################3
 
+
 def blank():
-    return px.line()
+    fig = px.scatter()
+    fig = format_active_axes(fig)
+    return fig
+
 
 # END BLANKS
 ############################################
@@ -176,14 +119,14 @@ def blank():
 ############################################
 
 
-def arima_visual_controller(df, target, params):
+def arima_visual_controller(df, target, params, differenced):
 
-    # df = new_data_con.get_model(target, params)
     try:
-        fig = plot_arima_predictions(df, target)
+        fig2 = plot_arima_predictions(df, target)
+        fig = build_differencing_chart(differenced, target)
     except Exception as E:
         print(E)
-    return fig
+    return fig, fig2
 
 
 def plot_arima_predictions(df, target):
@@ -216,8 +159,8 @@ def plot_arima_predictions(df, target):
         annotation_text="Goal Data",
         annotation_position="left",
     )
-
-    fig = format_active_graph_visual(fig)
+    fig = format_active_layout(fig)
+    fig = format_active_axes(fig)
 
     fig.update_layout(
         showlegend=True,
@@ -227,25 +170,14 @@ def plot_arima_predictions(df, target):
     return fig
 
 
-def old_arima_visual_controller(arima_gen, target, locale, age_group):
+def build_differencing_chart(df, target):
 
-    # df, differenced_df, arima_step = arima_gen.send([target, [locale, age_group]])
-    df, arima_step = arima_gen.send([target, [locale, age_group]])
-
-    df["Year"] = df["Year"].astype("str")
     df.index = df.index.astype("str")
 
-    fig1 = build_differencing_chart(df, target)
-    # fig2 = build_arima_visual(df, target)
-    print("Ready for fig display")
-    return fig1  # , fig2
-
-
-def build_differencing_chart(df, target):
     fig = make_subplots(rows=3, cols=1)
 
     fig.append_trace(
-        go.Scatter(x=df["Year"], y=df[target], marker=dict(color="white", size=3)),
+        go.Scatter(x=df["Year"], y=df[target], marker=dict(color="black", size=3)),
         row=1,
         col=1,
     )
@@ -262,42 +194,23 @@ def build_differencing_chart(df, target):
         col=1,
     )
 
-    fig = format_active_graph_visual(
-        fig, min_range=False, max_range=False, units="False"
-    )
+    fig = format_active_layout(fig)
+
+    fig = format_active_axes(fig, min_range=None, max_range=None, units="False")
 
     fig.update_layout(
         title=dict(text="Differenced Data", font=dict(size=22),),
         margin={"r": 10, "t": 50, "l": 5, "b": 25},
         showlegend=False,
     )
-
     return fig
 
 
-def build_arima_visual(df, target):
-
-    # try:
-    #     df, arima_step = next(arima_gen)
-    # except Exception as E:
-    #     print('differencing error', E)
-
-    # df['Year'] = df['Year'].astype('str')
-    # df.index = df.index.astype('str')
-    print(df.columns)
-    trace1 = px.line(x=df["Year"], y=df["converted"])
-    trace2 = px.line(x=df["Year"], y=df["MedianIncome"])
-
-    fig = go.Figure(data=trace1.data + trace2.data)
-    fig = format_active_graph_visual(
-        fig, min_range=False, max_range=False, units="False"
-    )
-    return fig
 # END ARIMA VISUALS
 ####################################################
 
 
-# ANALYSIS PAGE VISUALS
+# ANALYSIS PAGE VISUAL CONTROLLERS
 #####################################################
 
 
@@ -335,39 +248,48 @@ def home_price_visual_master(home_prices, target_fips):
     df = df[(df.FIPS == target_fips)]
 
     args = [min_range, max_range, locale_options[target_fips]]
-
-    fig3 = build_fig_three(df, args)
+    try:
+        fig3 = build_average_house_prices(df, args)
+    except Exception as E:
+        print(E)
     return fig3
 
 
-def income_by_age_group(df, args):
-    start = time.perf_counter()
+# END ANALYSIS PAGE VISUAL CONTROLLERS
+#####################################################
 
+
+# ANALYSIS PAGE VISUAL BUILDERS
+#####################################################
+
+
+def income_by_age_group(df, args):
     color_map = map_colors()
 
-    traces = []
     age_group_list = df.AgeGroup.unique().tolist()
 
+    # Create List of Figure
+    traces = []
     trace1 = px.bar(
         x=df["Year"].unique(),
         y=df[(df.AgeGroup == "overall")]["MedianIncome"],
         opacity=0.3,
     )
     traces.append(trace1)
+
     for age in age_group_list:
         if age == "overall":
             continue
 
         trace = px.line(
-            x=df["Year"].unique(),
-            y=df[(df.AgeGroup == age)]["MedianIncome"],
-            # color=df["AgeGroup"],
-            # color_discrete_map=color_map,
+            x=df["Year"].unique(), y=df[(df.AgeGroup == age)]["MedianIncome"],
         )
+
         trace.update_traces(line=dict(color=color_map[age], width=3, dash="dash"))
         trace.update_traces(name=age_groups[age])
         traces.append(trace)
 
+    # Create Composite Figure
     fig = go.Figure(
         data=traces[0].data
         + traces[1].data
@@ -376,6 +298,7 @@ def income_by_age_group(df, args):
         + traces[4].data
     )
 
+    # Add Rectangles
     max_year = df.dropna().Year.max()
     try:
         fig.add_vrect(
@@ -400,14 +323,7 @@ def income_by_age_group(df, args):
     except Exception as E:
         print(E)
 
-    # fig.update_traces(line=dict(width=2))
-    # fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
-    # fig.update_traces(
-    #         mode="markers",
-    #         marker_line_width=2,
-    #         marker_size=10,
-    #     )
-
+    # Add preliminary formatting
     min_range, max_range, locale = args
     fig.update_layout(
         title=dict(
@@ -424,62 +340,50 @@ def income_by_age_group(df, args):
             bgcolor=("rgba(0,0,0,0)"),
         ),
     )
-    fig = format_active_graph_visual(fig, min_range, max_range, "Year")
-    build_time = round(time.perf_counter() - start, 3)
+    # Send out for final formatting
+    fig = format_active_layout(fig)
+    fig = format_active_axes(fig, min_range, max_range, "Year")
     return fig
 
 
 def build_average_median_income(df):
+
+    # Filter Dataset
     df = df[(df.AgeGroup != "overall")]
     df = df.groupby(by=["FIPS", "County"])[["MedianIncome"]].agg("mean").reset_index()
     df.sort_values(by="MedianIncome", ascending=True, inplace=True)
     df = df.tail(5)
-    fig = px.bar(x=df["MedianIncome"], y=df["County"])
-    fig = format_active_graph_visual(fig)
-    fig.update_yaxes(tickprefix="")
-    fig.update_xaxes(tickprefix="$")
+    df["displayed_text"] = df["MedianIncome"].apply(
+        lambda x: "$" + "{:,}".format(round(x, 2))
+    )
+
+    # Create Figure
+    fig = px.bar(df, x="MedianIncome", y="County", text="displayed_text")
+
+    # Send out for formatting.
+    fig = format_active_layout(fig)
+    fig = format_active_axes(fig)
+
+    # Adjust formatting
+    fig.update_yaxes(tickprefix="", title=None)
+    fig.update_xaxes(showticklabels=False, ticks=None)
+
+    # Set Title
     fig.update_layout(
         title=dict(
             text=f"<b>Counties with Highest Overall Average Median Income<b>",
             font=dict(size=20),
         )
     )
-    return fig
 
-
-def build_fig_one(df, args):
-
-    color_map = map_colors()
-    fig = px.line(
-        x=df["Year"],
-        y=df["MedianIncome"],
-        color=df["AgeGroup"],
-        color_discrete_map=color_map,
+    # Add text to bars
+    fig.update_traces(
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont={"color": "white", "size": 15},
     )
-
-    max_year = df.dropna().Year.max()
-    try:
-        fig.add_vrect(
-            x0=2000,
-            x1=2005,
-            fillcolor="red",
-            opacity=0.3,
-            line_width=0,
-            annotation_text="No Data",
-            annotation_position="top left",
-        )
-
-        fig.add_vrect(
-            x0=2019,
-            x1=2022,
-            fillcolor="red",
-            opacity=0.20,
-            line_width=0,
-            annotation_text="No Data",
-            annotation_position="top left",
-        )
-    except Exception as E:
-        print(E)
+    fig.update_xaxes(showline=False)
+    return fig
 
     fig.update_traces(line=dict(width=2))
     # fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
@@ -508,57 +412,37 @@ def build_fig_one(df, args):
             bgcolor=("rgba(0,0,0,0)"),
         ),
     )
-    fig = format_active_graph_visual(fig, min_range, max_range, "Year")
+    fig = format_active_layout(fig)
+    fig = format_active_axes(fig, min_range, max_range, "Year")
     return fig
 
 
-def build_fig_two(df, args):
-    start = time.perf_counter()
-    # df = new_data_con.income_data_generator()
-    color_map = map_colors()
-    fig = px.bar(
-        x=df["Year"],
-        y=df["MedianIncome"],
-        color=df["AgeGroup"],
-        barmode="group",
-        color_discrete_map=color_map,
-    )
-
-    min_range, max_range, locale = args
-    fig.update_layout(
-        title=dict(
-            text=f"<b>Median Income by Age Group for {locale}<b>", font=dict(size=20),
-        ),
-    )
-    fig = format_active_graph_visual(fig, min_range, max_range, "Year")
-    build_time = round(time.perf_counter() - start, 3)
-    return fig, build_time
-
-
-def build_fig_three(df, args):
+def build_average_house_prices(df, args):
     df = df.drop_duplicates()
-    fig = px.bar(df, x="Date", y="MedianHousePrice", color="FIPS")
-    fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,.5)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=df["Date"],
+            y=df["MedianHousePrice"],
+            hoveron="points+fills",
+            fillcolor="lightgrey",
+            name="Median Income",
+            fill="tozeroy",
+            line=dict(width=2, color="rgb(0, 0, 0)"),
+        )
     )
+    # fig = px.bar(df, x="Date", y="MedianHousePrice", color="FIPS")
+
     min_range, max_range, locale = args
 
     fig.update_layout(
         title=dict(text=f"<b>Median House Price for {locale}<b>", font=dict(size=20),),
         showlegend=False,
     )
-
-    fig = format_active_graph_visual(fig, min_range, max_range, "Date")
-    # print("Here")
-    # if min_range:
-    #     print("here")
-    #     fig.update_yaxes(
-    #     range=[min_range - (min_range * 0.1), max_range + (max_range * 0.1)],
-    #     )
-
+    fig = format_active_layout(fig)
+    fig = format_active_axes(fig, min_range, max_range, "Date")
     return fig
 
 
@@ -600,7 +484,8 @@ def build_income_line_chart(income_df):
 
     return fig
 
-# END ANALYSIS PAGE VISUALS
+
+# END ANALYSIS PAGE VISUAL BUILDERS
 ####################################################
 
 
@@ -750,12 +635,187 @@ def map_builder(
     print("Finished Building Median Income Choropleth Map")
     return fig
 
+
 # END MAP VISUALS
+####################################################
+
+# Build Polynomial Visualizations
+####################################
+
+
+def build_polynomial_model(model_data, target, locale, best):
+    """ This function creates a visualization for a polynomial regression model. """
+
+    # This data was returned from a generator yield on the MODEL_LAYOUT page.
+    # It is yielded from the poly_generator in the data_control.py file
+    # It is received in a list and unpacked in the code below.
+    try:
+        i, predictions, original, futures = model_data
+    except Exception as E:
+        print("Error in build_polynomial_model", E)
+
+    # Get the dates for the predictions
+    freq = "M" if target != "MedianIncome" else "Y"
+    num_periods = futures.shape[0]
+    fixed_dates = data_con.get_date_range(
+        original["date"].dropna().tolist()[-1], num_periods, freq
+    )
+
+    # Add the prediction dates to the prediction df
+    futures["date"] = fixed_dates
+
+    # combine all the dataframes
+    data_for_plotting = pd.merge(
+        original, predictions, left_on="predictor", right_on="x_var", how="outer"
+    )
+    data_for_plotting = pd.merge(
+        data_for_plotting,
+        futures,
+        left_on=["predictor", "date"],
+        right_on=["predictor", "date"],
+        how="outer",
+    )
+    data_for_plotting["date"] = pd.to_datetime(data_for_plotting["date"])
+
+    # Create the first trace
+    if target == "MedianIncome":
+        fig1 = px.scatter(x=data_for_plotting["date"], y=data_for_plotting[target])
+        fig1.update_traces(
+            mode="markers",
+            marker_line_width=2,
+            marker_size=15,
+            marker_color="rgba(0,0,255,.3)",
+        )
+
+    else:
+        fig1 = px.line(x=data_for_plotting["date"], y=data_for_plotting[target])
+        fig1.update_traces(line=dict(color="black", width=3))
+
+    # Create the second trace
+    fig2 = px.line(x=data_for_plotting["date"], y=data_for_plotting["predictions"])
+
+    fig3 = px.line(x=data_for_plotting["date"], y=data_for_plotting["futures"])
+
+    fig2.update_traces(line=dict(color="white", width=3, dash="dash"))
+    fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
+
+    # Combine the traces into a single figure
+    final_fig = go.Figure(data=fig1.data + fig2.data + fig3.data)
+
+    if best:
+        indicate_best = "| Lowest RMSE | (Animation Paused)"
+    else:
+        indicate_best = ""
+
+    title_string = f"""
+    <b>{feature_options[target]} | Degrees: {i}<br>
+    {locale_options[locale]} {indicate_best}<b>
+    """
+    # Add and format the title
+    final_fig.update_layout(title=dict(text=title_string, font=dict(size=20),))
+
+    min_range = original[target].min()
+    max_range = original[target].max()
+
+    # Send the figure out for formatting.
+    final_fig = format_active_layout(final_fig)
+
+    final_fig = format_active_axes(final_fig, min_range, max_range)
+    return final_fig
+
+
+# END POLYNOMIAL VISUALS
 ####################################################
 
 
 # Possible Trash
 ##########################################33
+
+# def build_fig_two(df, args):
+#     start = time.perf_counter()
+#     # df = new_data_con.income_data_generator()
+#     color_map = map_colors()
+#     fig = px.bar(
+#         x=df["Year"],
+#         y=df["MedianIncome"],
+#         color=df["AgeGroup"],
+#         barmode="group",
+#         color_discrete_map=color_map,
+#     )
+
+#     min_range, max_range, locale = args
+#     fig.update_layout(
+#         title=dict(
+#             text=f"<b>Median Income by Age Group for {locale}<b>", font=dict(size=20),
+#         ),
+#     )
+#     fig = format_active_axes(fig, min_range, max_range, "Year")
+#     build_time = round(time.perf_counter() - start, 3)
+#     return fig, build_time
+
+
+# def build_fig_one(df, args):
+
+#     color_map = map_colors()
+#     fig = px.line(
+#         x=df["Year"],
+#         y=df["MedianIncome"],
+#         color=df["AgeGroup"],
+#         color_discrete_map=color_map,
+#     )
+
+#     max_year = df.dropna().Year.max()
+#     try:
+#         fig.add_vrect(
+#             x0=2000,
+#             x1=2005,
+#             fillcolor="red",
+#             opacity=0.3,
+#             line_width=0,
+#             annotation_text="No Data",
+#             annotation_position="top left",
+#         )
+
+#         fig.add_vrect(
+#             x0=2019,
+#             x1=2022,
+#             fillcolor="red",
+#             opacity=0.20,
+#             line_width=0,
+#             annotation_text="No Data",
+#             annotation_position="top left",
+#         )
+#     except Exception as E:
+#         print(E)
+
+
+# def build_arima_visual(df, target):
+
+#     trace1 = px.line(x=df["Year"], y=df["converted"])
+#     trace2 = px.line(x=df["Year"], y=df["MedianIncome"])
+
+#     fig = go.Figure(data=trace1.data + trace2.data)
+#     fig = format_active_layout(fig)
+
+#     fig = format_active_axes(
+#         fig, min_range=False, max_range=False, units="False"
+#     )
+#     return fig
+
+
+# def old_arima_visual_controller(arima_gen, target, locale, age_group):
+
+#     # df, differenced_df, arima_step = arima_gen.send([target, [locale, age_group]])
+#     df, arima_step = arima_gen.send([target, [locale, age_group]])
+
+#     df["Year"] = df["Year"].astype("str")
+#     df.index = df.index.astype("str")
+
+#     fig1 = build_differencing_chart(df, target)
+#     # fig2 = build_arima_visual(df, target)
+#     print("Ready for fig display")
+#     return fig1  # , fig2
+
 
 # def build_static_map_one():
 
