@@ -14,7 +14,11 @@ start_interval = 5 * 1000
 # polynomial visualizations. The generator is located in data_control.py
 arima_gen = None
 arima_gen = new_data_con.get_model()
-next(arima_gen)
+
+master_df = next(arima_gen)
+adf_gen = new_data_con.run_arima(master_df)
+next(adf_gen)
+
 
 feature_options = {
     "MedianIncome": "Median Income",
@@ -89,9 +93,9 @@ MODEL_LAYOUT = html.Div(
                             "padding": "0px",
                             "float": "left",
                             "width": "4",
-                            "height": "50vh",
+                            "height": "75vh",
                             "margin-top": "10px",
-                            "box-shadow": shadow,  # Set on config page
+                            "box-shadow": "1px 2px 4px 7px lightgrey",
                         },
                     ),
                 ),
@@ -105,7 +109,7 @@ MODEL_LAYOUT = html.Div(
                             "width": "5",
                             "height": "50vh",
                             "margin-top": "10px",
-                            "box-shadow": shadow,  # Set on config page
+                            "box-shadow": "1px 2px 4px 7px lightgrey",
                         },
                     )
                 ),
@@ -138,51 +142,53 @@ def model_builder(n, feature_value, locale_value, age_group, interval):
         new_interval = 5 * 1000
     else:
         new_interval = 5 * 1000
+    differenced = adf_gen.send([feature_value, params])
 
     df = arima_gen.send([feature_value, params])
-    fig1 = viz.arima_visual_controller(df, feature_value, params)
+    fig1, fig2 = viz.arima_visual_controller(df, feature_value, params, differenced)
 
-    return fig1, viz.blank(), new_interval
+    return fig1, fig2, new_interval
 
 
-def old_model_builders(n, feature_value, locale_value, interval):
-    # If there is no value picked in the dropdown, assign the default.
-    if feature_value is None:
-        feature_value = "MedianIncome"
-    feature_value = "MedianIncome"
+## POSSIBLY TRASH
+# def old_model_builders(n, feature_value, locale_value, interval):
+#     # If there is no value picked in the dropdown, assign the default.
+#     if feature_value is None:
+#         feature_value = "MedianIncome"
+#     feature_value = "MedianIncome"
 
-    # If there is no value picked in the dropdown assign the default.
-    if locale_value is None:
-        locale_value = "34001"
+#     # If there is no value picked in the dropdown assign the default.
+#     if locale_value is None:
+#         locale_value = "34001"
 
-    # Get the next data from the model results
-    # and check to see if the result was the best result.
+#     # Get the next data from the model results
+#     # and check to see if the result was the best result.
 
-    # If there is no data, then return a response to the page.
+#     # If there is no data, then return a response to the page.
 
-    # if data is None:
-    #     return html.H2("Waiting for the data. ")
+#     # if data is None:
+#     #     return html.H2("Waiting for the data. ")
 
-    # Send any updates to the model builder.
-    age_group = "overall"
+#     # Send any updates to the model builder.
+#     age_group = "overall"
 
-    # Send the model data, and current dropdowns to the visual builder.
-    # fig1 = viz.build_polynomial_model(data, feature_value, locale_value, best)
-    try:
-        # fig1 = arima_visual_builder.send([arima_gen, feature_value, locale_value, age_group])
-        #         fig1 = viz.build_differencing_chart(arima_gen, feature_value, locale_value, age_group)
-        #         fig1 = None
-        #         fig1 = viz.build_arima_visual(arima_gen, feature_value, locale_value, age_group)
-        # fig1 = viz.arima_visual_controller(arima_gen, feature_value, locale_value, age_group)
-        print("Nothing")
+#     # Send the model data, and current dropdowns to the visual builder.
+#     # fig1 = viz.build_polynomial_model(data, feature_value, locale_value, best)
+#     try:
+#         # fig1 = arima_visual_builder.send([arima_gen, feature_value, locale_value, age_group])
+#         #         fig1 = viz.build_differencing_chart(arima_gen, feature_value, locale_value, age_group)
+#         #         fig1 = None
+#         #         fig1 = viz.build_arima_visual(arima_gen, feature_value, locale_value, age_group)
+#         # fig1 = viz.arima_visual_controller(arima_gen, feature_value, locale_value, age_group)
+#         print("Nothing")
 
-    except Exception as E:
-        print("Fig creation exception: ", E)
+#     except Exception as E:
+#         print("Fig creation exception: ", E)
 
-    best = True
-    if best:
-        new_interval = 60 * 1000
-        return fig1, new_interval
-    else:
-        new_interval = 30 * 1000
-        return fig1, new_interval
+#     best = True
+#     if best:
+#         new_interval = 60 * 1000
+#         return fig1, new_interval
+#     else:
+#         new_interval = 30 * 1000
+#         return fig1, new_interval

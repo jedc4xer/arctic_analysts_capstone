@@ -104,7 +104,7 @@ def home_price_data_generator(current_state="OFF"):
 
 
 def income_data():
-    """ This is a static call that will only return data once."""
+    """ This generator returns data to analysis visuals. """
 
     data_gen = data_getter.dispatcher()
     master_df = next(data_gen)
@@ -134,30 +134,22 @@ def highest_median_income():
 
     cols_to_keep = ["FIPS", "County", "Year", "MedianIncome", "AgeGroup"]
     filtered_df = master_df[cols_to_keep].copy()
-    print(filtered_df)
 
 
 # ARIMA DISPATCHER
 ####################################################
 
 
-def run_arima():
+def run_arima(master_df):
 
-    data_gen = data_getter.dispatcher()
-    master_df = next(data_gen)
-
-    print(master_df.shape)
+    target, params = yield "Ready for Next"
     while True:
 
-        target, params = yield "Ready for Next"
-
         filtered_data = arima.filter_data(master_df, target, params)
-
         adf_filtered_df, best_col, num_diffs = arima.get_adf(filtered_data, target)
-        yield adf_filtered_df, "differenced"
+        target, params = yield adf_filtered_df
         # graph_ready, export_ready = arima.dispatcher(master_df, target, params)
         # yield graph_ready, adf_filtered_df, 'arima'
-    pass
 
 
 # HELPER FUNCTIONS
@@ -169,7 +161,7 @@ def get_model():
     data_gen = data_getter.dispatcher()
     master_df = next(data_gen)
 
-    target, params = yield "Ready"
+    target, params = yield master_df
     while True:
 
         if target == "MedianIncome":
@@ -222,7 +214,6 @@ def get_model():
         combined_df["full_results"] = new_items
         combined_df["FIPS"] = fips
         combined_df["AgeGroup"] = age_group
-        print(combined_df)
         target, params = yield combined_df
 
 
