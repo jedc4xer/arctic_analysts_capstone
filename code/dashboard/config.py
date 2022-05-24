@@ -11,7 +11,7 @@ server = "gen10-data-fundamentals-22-02-sql-server.database.windows.net"
 
 mode = "normal"  # dark or normal
 
-shadow = "4px 4px 4px 4px lightgrey"
+shadow = "1px 3px 5px 7px lightgrey"
 tight_shadow = "1px 1px 1px 1px lightgrey"
 
 feature_options = {

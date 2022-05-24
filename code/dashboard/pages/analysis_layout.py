@@ -11,6 +11,8 @@ import time
 try:
     yearly_income = new_data_con.income_data_generator()
     home_prices = new_data_con.home_price_data_generator()
+    income_vs_house_gen = new_data_con.income_vs_house_price()
+    next(income_vs_house_gen)
 except Exception as E:
     print("Analysis Layout: Exception 1A", E)
 
@@ -102,29 +104,45 @@ ANALYSIS_LAYOUT = html.Div(
                                 "padding": "0px",
                                 "float": "left",
                                 "height": "35vh",
-                                "margin-top": "15px",
+                                "margin-top": "20px",
+                                "border-color": "black",
+                                "box-shadow": shadow,  # Set on config page
+                            },
+                            config={"displayModeBar": False},
+                        ),
+                    ]
+                ),
+                dcc.Interval(id="graph_1", interval=1 * 1000, n_intervals=0),
+                dbc.Col(
+                    [
+                        dcc.Graph(
+                            id="income_vs_hp",
+                            # figure=fig4,
+                            style={
+                                "padding": "0px",
+                                "float": "right",
+                                "height": "35vh",
+                                "margin-top": "20px",
                                 "border-color": "black",
                                 "box-shadow": shadow,  # Set on config page
                             },
                             config={"displayModeBar": False},
                         ),
                     ],
-                    width="2",
+                    width="4",
                 ),
             ],
-            className="h-25",
+            className="h-50",
         ),
     ]
 )
 
 
 @callback(
-    # Output("analysis_page_first", "figure"),
-    # Output("median_income_chart", "figure"),
     Output("home_price_chart", "figure"),
     Input("graph_1", "n_intervals"),
     Input("locale_dropdown", "value"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def analysis_viz_builders(n, locale_value):
 
@@ -132,31 +150,24 @@ def analysis_viz_builders(n, locale_value):
         locale_value = "34001"
 
     try:
-        # fig1, fig2 = viz.income_visual_master(yearly_income, locale_value)
-        fig3 = viz.home_price_visual_master(home_prices, locale_value)
+        fig = viz.home_price_visual_master(home_prices, locale_value)
     except Exception as E:
         return viz.blank()
 
-    return fig3
+    return fig
 
 
 @callback(
     Output("analysis_page_first", "figure"),
     Output("median_income_chart", "figure"),
+    Output("income_vs_hp", "figure"),
     Input("locale_dropdown", "value"),
 )
 def update_visual_one(locale):
     locale = "34001" if locale is None else locale
 
-    time.sleep(1)
+    time.sleep(0.25)
     fig, fig1 = viz.income_visual_master(yearly_income, locale)
-    return fig, fig1
 
-
-# @callback(
-#     Output("median_income_chart", "figure"),
-#     Input("graph_2", 'n_intervals')
-#     )
-# def analysis_viz_builders1(n):
-#     fig1 = viz.build_fig_one(yearly_income)
-#     return fig1
+    fig2 = viz.build_income_vs_house_price(next(income_vs_house_gen))
+    return fig, fig1, fig2

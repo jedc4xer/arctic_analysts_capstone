@@ -1,15 +1,14 @@
-import pandas as pd
-import datetime as dt
-from math import sqrt
-from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
 import joblib
-
+import pandas as pd
+from math import sqrt
+import datetime as dt
 from warnings import filterwarnings
-filterwarnings('ignore')
+from statsmodels.tsa.arima.model import ARIMA
+from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.stattools import adfuller
+from sklearn.model_selection import train_test_split
 
+filterwarnings('ignore')
 
 
 # HELPER FUNCTIONS
@@ -34,25 +33,6 @@ def convert_to_date(year, month):
     #date = dt.datetime.strftime(date, "%Y-%m-%d")
     return date
 
-# VISUALIZE
-##############################################
-
-def graph_final_results(copy_for_graph, target):
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-    
-    copy_for_graph['Year'] = copy_for_graph['Year'].astype('str')
-
-    fig = plt.figure(figsize = (17,5))
-    plt.title(f'{target} for one county', fontsize = 22)
-    ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph['converted'], linewidth=3, label = 'Predicted', )
-    ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph[target], linewidth = 4, color = 'black', label = 'Ground Truth')
-    ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph['train_set'], linewidth = 2, color = 'green', label = 'Train Set')
-    ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph['test_set'], linewidth = 2, color = 'red', label = 'Test Set')
-
-    ax.invert_yaxis()
-    plt.show()
-    
 
 
 # DATA FILTERING
@@ -135,6 +115,7 @@ def evaluate_models(df, p_values, d_values, q_values):
     print('Best ARIMA%s RMSE=%.3f' % (best_cfg, best_score))
     return best_cfg
 
+
 # AUGMENTED DICKEY-FULLER
 ####################################
 
@@ -155,53 +136,26 @@ def get_adf(df, target):
             best_adf = adf_result[1]
         else:
             if adf_result[1] < best_adf:
+                print(f'In the best result. Current Iteration: {i}, current_col: {col}')
                 best_col = col
                 best_adf = adf_result[1]
                 num_diffs = i
                 
+             
         print(f'Column: {col} | ADF Statistic: {adf_result[0]} | P-Value: {adf_result[1]}')
+    print("\n###############################################\n")
+    print(f'Best Result: Column: {best_col} | ADF Statistic: {adf_result[0]}\nP-Value: {adf_result[1]} | Passed? {adf_result[1] <.05} | Num Diffs: {num_diffs}')
+    print("\n###############################################\n")
     if best_col == 'diff_12':
         num_diffs = 12
     return df, best_col, num_diffs
 
 
-# UNDIFFERENCING
-##########################################3
-
-def undifference(completed_df, num_diffs, target):
-    
-    # Shift the columns to prepare for undifferencing
-    for col in ['predicted_mean','train_set','test_set']:
-        completed_df[col] = completed_df[col].shift(-num_diffs)
-
-    # Create empty column for results
-    completed_df['converted'] = None
-    
-    # undifference the train and test set columns
-    for col in ['train_set','test_set']:
-        completed_df[col] = completed_df[target] + completed_df[col]
-        completed_df[col] = completed_df[col].shift(num_diffs)
-    
-    # undifference and record the prediction results
-    for i in completed_df.index.tolist():
-        target_val = completed_df.loc[i, target]
-        predicted_val = completed_df.loc[i, 'predicted_mean']
-
-        
-        if str(target_val) != 'nan':
-            completed_df.loc[i, 'converted'] = target_val
-        else:
-            if str(predicted_val) != 'nan':
-                last_val = completed_df.loc[i-1, 'converted']
-                completed_df.loc[i, 'converted'] = predicted_val + last_val
-                
-    return completed_df
-
 # FINALIZATION
 #####################################################
 
 def finalize_results(completed_df, target):
-    completed_df['converted'] = completed_df['converted']#.shift(num_diffs)
+    completed_df['converted'] = completed_df['predicted_mean']#.shift(num_diffs)
 
     copy_for_graph = completed_df.reset_index().copy()
     copy_for_graph.drop(columns = ['Year'], inplace = True)
@@ -221,13 +175,22 @@ def control_arima(master_table, target, params):
     """ This function contains the meat of the ARIMA Method."""
     def ARIMA_predict(df, best_col, best_arima, num_periods, target, params):
 
-        y_train, y_test = train_test_split(df[best_col].dropna(), train_size = .75, shuffle = False)
+        y_train, y_test = train_test_split(df[target].dropna(), train_size = .75, shuffle = False)
         model = ARIMA(y_train, order = best_arima)
         fitted = model.fit()
-        file_name = f'model_dump/{target}_{params[0]}_{params[1]}_model.sav'
+        file_name = f'model_dump/{target}_{params[0]}_{params[1]}_model_train.sav'
         joblib.dump(fitted, file_name)
-
+        
+        # Running this again because I actually want the predictions using the whole dataset
+        # And the update methods weren't working.
+        model = ARIMA(df[target].dropna(), order = best_arima)
+        fitted = model.fit()        
         predictions = fitted.forecast(num_periods, alpha=0.05)
+
+        file_name = f'model_dump/{target}_{params[0]}_{params[1]}_model_pred.sav'
+        joblib.dump(fitted, file_name)
+        
+        
 
         return predictions, y_train, y_test
     
@@ -238,19 +201,21 @@ def control_arima(master_table, target, params):
     adf_filtered_df, best_col, num_diffs = get_adf(filtered_df, target)
     
     print(adf_filtered_df.shape)
+    
+    print(f'Best Num Differences: {num_diffs}')
     # gridsearch for hyper parameters
     if target == 'MedianIncome':
         best_arima = evaluate_models(
             adf_filtered_df[best_col].dropna(),
             [0,1,2,3,4,5,6],
-            range(0,3),
-            range(0,3)
+            [num_diffs],
+            range(0,5)
         )
     else:
         best_arima = evaluate_models(
             adf_filtered_df[best_col].dropna(),
             [2,3,4,5],
-            range(1,3),
+            [num_diffs],
             range(1,3)
         )
     
@@ -268,11 +233,11 @@ def control_arima(master_table, target, params):
 
     # Convert training set to dataframe
     train_set = y_train.reset_index().set_index('new_index')
-    train_set.rename(columns = {best_col: 'train_set'}, inplace = True)
+    train_set.rename(columns = {target: 'train_set'}, inplace = True)
 
     # Convert testing set to dataframe
     test_set = y_test.reset_index().set_index('new_index')
-    test_set.rename(columns = {best_col: 'test_set'}, inplace = True)
+    test_set.rename(columns = {target: 'test_set'}, inplace = True)
 
     # Combine testing and training and predictions (model results)
     model_result_df = pd.merge(predictions, train_set, left_index = True, right_index = True, how = 'outer')
@@ -280,18 +245,16 @@ def control_arima(master_table, target, params):
 
     # Combine filtered ground truth dataframe with model results
     completed_df = pd.merge(filtered_df, model_result_df, left_index = True, right_index = True, how = 'outer')
-
-    # This will probably fail, but I don't know what to change it to yet.
-    #completed_df.drop(columns = ['FIPS','AgeGroup','diff_1','diff_2'], inplace = True)
     
     return completed_df, num_diffs
 
 
 def dispatcher(master_table, target, params):
     try:
-        ready_for_undiff, num_diffs = control_arima(master_table, target, params)
+        predicted_data, num_diffs = control_arima(master_table, target, params)
     except Exception as E:
         print(E)
-    undifferenced = undifference(ready_for_undiff.copy(), num_diffs, target)
-    graph_ready, export_ready = finalize_results(undifferenced, target)
+        
+    graph_ready, export_ready = finalize_results(predicted_data, target)
     return graph_ready, export_ready
+
