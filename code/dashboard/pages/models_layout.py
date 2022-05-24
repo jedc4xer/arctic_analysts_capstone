@@ -142,10 +142,10 @@ def model_builder(n, feature_value, locale_value, age_group, interval):
         new_interval = 5 * 1000
     else:
         new_interval = 5 * 1000
-    differenced = adf_gen.send([feature_value, params])
+    differenced, results = adf_gen.send([feature_value, params])
 
     df = arima_gen.send([feature_value, params])
-    fig1, fig2 = viz.arima_visual_controller(df, feature_value, params, differenced)
+    fig1, fig2 = viz.arima_visual_controller(df, feature_value, params, differenced, results)
 
     return fig1, fig2, new_interval
 

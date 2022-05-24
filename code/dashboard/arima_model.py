@@ -152,10 +152,12 @@ def get_adf(df, target):
     if target != "MedianIncome":
         df["diff_12"] = df[target].diff(periods=12)
         cols_to_check = [target, "diff_12"]
-
+    results = []
     best_adf = 1000000000
     for i, col in enumerate(cols_to_check):
         adf_result = adfuller(df[col].dropna())
+        result = {'Seq': i, 'ADF Statistic': adf_result[0], 'P-Value': adf_result[1]}
+        results.append(result)
         if col == target:
             best_adf = adf_result[1]
         else:
@@ -164,12 +166,12 @@ def get_adf(df, target):
                 best_adf = adf_result[1]
                 num_diffs = i
 
-        print(
-            f"Column: {col} | ADF Statistic: {adf_result[0]} | P-Value: {adf_result[1]}"
-        )
+        # print(
+        #     f"Column: {col} | ADF Statistic: {adf_result[0]} | P-Value: {adf_result[1]}"
+        # )
     if best_col == "diff_12":
         num_diffs = 12
-    return df, best_col, num_diffs
+    return df, best_col, num_diffs, results
 
 
 # UNDIFFERENCING
