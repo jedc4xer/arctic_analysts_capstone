@@ -65,7 +65,13 @@ MAP_LAYOUT = html.Div(
                     ),
                     width=1,
                 ),
-                dbc.Col(width=4),
+                dbc.Col(
+#                     dcc.Input(
+#                         id="input_{}.format(_)", 
+#                         type=_,
+                        
+                        width=4),
+                    
                 dbc.Col(width=4),
             ]
         ),
@@ -98,6 +104,7 @@ MAP_LAYOUT = html.Div(
                             "margin-top": "10px",
                             "box-shadow": "1px 2px 4px 7px lightgrey",
                         },
+                        config={"displayModeBar": False},
                     )
                 ),
             ]
@@ -154,7 +161,7 @@ def modify_map2(base_map_style, age_group, year, animate):
 
     if year is None:
         year = 2021
-    year = 2021
+    year = 2022
 
     args = [0.12, 0.25, 30, 0.0189, "annual"]
     map2 = viz.map_builder(
