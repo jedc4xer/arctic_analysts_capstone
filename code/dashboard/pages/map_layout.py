@@ -16,7 +16,7 @@ try:
 except Exception as E:
     print("Map Layout: Exception 1A", E)
 
-years = [_ for _ in range(2005, 2020)]
+years = [_ for _ in range(2005, 2023)]
 
 MAP_LAYOUT = html.Div(
     [
@@ -65,11 +65,22 @@ MAP_LAYOUT = html.Div(
                     ),
                     width=1,
                 ),
-                dbc.Col([
-                    dcc.Input(id='range', type='number', min=2, max=10, step=1)],
-                    width=4),
-                    
-                dbc.Col(width=4),
+                dbc.Col(width=1),
+                # dbc.Col([
+                #     dcc.Input(id='range', type='number', min=2, max=10, step=1, 
+                #               style={'background-color': 'lightgrey'},
+                #              placeholder = "Downpayment")],
+                #     width=1),
+                # dbc.Col([
+                #     dcc.Input(id='range', type='number', min=15, max=30, step=15, 
+                #               style={'background-color': 'lightgrey'},
+                #              placeholder = "Mortgage Term")],
+                #     width=1),
+                # dbc.Col([
+                #     dcc.Input(id='range', type='number', min=2, max=10, step=1, 
+                #               style={'background-color': 'lightgrey'},
+                #              placeholder = "Tax Rate")],
+                #     width=1),
             ]
         ),
         dbc.Row(
@@ -158,7 +169,7 @@ def modify_map2(base_map_style, age_group, year, animate):
 
     if year is None:
         year = 2021
-    year = 2022
+    #year = 2010
 
     args = [0.12, 0.25, 30, 0.0189, "annual"]
     map2 = viz.map_builder(

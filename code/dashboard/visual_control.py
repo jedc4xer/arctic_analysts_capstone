@@ -475,7 +475,7 @@ def build_average_median_income(df):
     )
 
     # Create Figure
-    fig = px.bar(df, x="MedianIncome", y="County", text="displayed_text")
+    fig = px.bar(df, x="MedianIncome", y="County", text="displayed_text", opacity = .7)
 
     # Send out for formatting.
     fig = format_active_layout(fig)
@@ -497,7 +497,7 @@ def build_average_median_income(df):
     fig.update_traces(
         textposition="inside",
         insidetextanchor="middle",
-        textfont={"color": "white", "size": 15},
+        textfont={"color": "black", "size": 16},
     )
     fig.update_xaxes(showline=False)
     return fig
@@ -757,7 +757,7 @@ def build_animated_map(df, base_map_style, scale, animate):
 
 
 def build_affordability_map(df, base_map_style, scale, animate):
-
+    
     customdata = np.stack(
         (df["County"], df["MonthlyMortgage"], df["AgeGroup"]), axis=-1
     )
@@ -792,7 +792,8 @@ def map_builder(
     args,
     target="MedianIncome",
 ):
-
+    map_mode = animate
+    
     if not args:
         df = next(generator)
         df = df[(df[target] > 0)]
@@ -800,7 +801,8 @@ def map_builder(
 
     else:
         df = generator.send(args)
-
+    
+    
     if animate == "animated":
         print("Building Animated Map")
         map_title = f"Median Income (Animated) | {age_group}"
@@ -828,10 +830,6 @@ def map_builder(
         df.drop_duplicates(inplace=True)
         fig = build_affordability_map(df, base_map_style, scale, animate)
 
-    # if animate == 'animated':
-    #     slider_data = fig['layout']['sliders'][0]
-    #     print(f"active:{slider_data['active']} value:{slider_data['steps'][slider_data['active']]['args'][0][0]}")
-
     fig.update_layout(
         coloraxis_showscale=True,
         title=dict(text=f"<b>{map_title}<b>", font=dict(size=28)),
@@ -841,29 +839,47 @@ def map_builder(
         font_color="black",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
     )
-    fig.update_layout(
-        title_y=0.96,
-        title_x=0.05,
-        legend=dict(x=0.9, y=0.4),
-        coloraxis_colorbar=dict(
-            title=f"{feature_options[target]}",
-            titlefont=dict(color="white", size=15),
-            ticks="inside",
-            ticklen=24,
-            thickness=25,
-            tickcolor="white",
-            tickfont=dict(color="white", size=14),
-            tickprefix="$",
-            len=0.85
-            #             thicknessmode="pixels", thickness=25,
-            #             lenmode="fraction", len=.5,
-            #             yanchor="top", y=.75,
-            #             ticks="outside", ticksuffix=" bills",
-            #             #dtick=100000
-        ),
-    )
+    if map_mode != 'static-affordability':
+        fig.update_layout(
+            title_y=0.96,
+            title_x=0.05,
+            #legend=dict(x=0.9, y=0.4),
+            coloraxis_colorbar=dict(
+                title=f"{feature_options[target]}",
+                titlefont=dict(color="white", size=15),
+                ticks="inside",
+                ticklen=24,
+                thickness=25,
+                tickcolor="white",
+                tickfont=dict(color="white", size=14),
+                tickprefix="$",
+                len=0.85
+                #             thicknessmode="pixels", thickness=25,
+                #             lenmode="fraction", len=.5,
+                #             yanchor="top", y=.75,
+                #             ticks="outside", ticksuffix=" bills",
+                #             #dtick=100000
+            ),
+        )
+        
+    if map_mode == 'static-affordability':
+        fig.update_layout(
+            title_y=0.96,
+            title_x=0.05,
+            legend=dict(
+                bordercolor='black',
+                borderwidth=2,
+                bgcolor='rgba(255,255,255,.7)',
+                x=0.97, 
+                y=0.4,
+                font=dict(color='black', size=16),
+                xanchor='right',
+                title = dict(
+                    text= 'Is the County Affordable?')
+            ),
+            
+        )
 
-    print("Finished Building Median Income Choropleth Map")
     return fig
 
 

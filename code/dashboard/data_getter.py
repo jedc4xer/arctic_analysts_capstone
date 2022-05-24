@@ -42,20 +42,20 @@ def join_tables(all_df):
     master_table = pd.merge(
         main_table, year_df, left_on="YearID", right_on="YearID", how="outer"
     )
-    print(master_table.shape[0])
+    #print(master_table.shape[0])
     # Now has 5607 rows
 
     master_table = pd.merge(
         master_table, month_df, left_on="MonthID", right_on="MonthID", how="outer"
     )
     # Now has 5607 rows
-    print(master_table.shape[0])
+    #print(master_table.shape[0])
 
     master_table = pd.merge(
         master_table, county_df, left_on="FIPS", right_on="FIPS", how="outer"
     )
     # Now has 5607 rows
-    print(master_table.shape[0])
+    #print(master_table.shape[0])
 
     master_table = pd.merge(
         master_table,
@@ -65,7 +65,7 @@ def join_tables(all_df):
         how="outer",
     )
     # Now has 20727 rows
-    print(master_table.shape[0])
+    #print(master_table.shape[0])
 
     master_table.loc[(master_table.MedianIncome < 0), "MedianIncome"] = None
     return master_table
