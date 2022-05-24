@@ -5,8 +5,9 @@ import datetime as dt
 
 database = "arctic_analysts_capstone"
 user = "arctic_analysts"
-password  = "ThisPassw0rd!"
+password = "ThisPassw0rd!"
 server = "gen10-data-fundamentals-22-02-sql-server.database.windows.net"
+
 
 def sql_query(query):
     conn = pymssql.connect(server, user, password, database)
