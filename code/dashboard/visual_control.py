@@ -6,10 +6,8 @@ import pandas as pd
 import datetime as dt
 import plotly.express as px
 import arima_model as arima
-
-# import data_control as data_con # Deprecated
-import new_data_control as new_data_con
 import plotly.graph_objects as go
+import new_data_control as new_data_con
 from plotly.subplots import make_subplots
 from config import counties, feature_options, locale_options, age_groups, mode
 
@@ -76,6 +74,8 @@ def format_active_axes(fig, min_range=None, max_range=None, units=None):
 
     if units == "Year":
         fig.update_xaxes(range=[2000, 2022])
+    elif units == "SomeYears":
+        fig.update_xaxes(range=[2005, 2022])
 
     fig.update_yaxes(
         showgrid=False,
@@ -122,20 +122,31 @@ def blank():
 def arima_visual_controller(df, target, params, differenced):
 
     try:
-        fig2 = plot_arima_predictions(df, target)
+        fig2 = plot_arima_predictions(df, target, params[0])
         fig = build_differencing_chart(differenced, target)
     except Exception as E:
         print(E)
     return fig, fig2
 
 
-def plot_arima_predictions(df, target):
+def plot_arima_predictions(df, target, locale):
 
     df["Year"] = df.Year.astype("int")
-    trace1 = px.line(x=df["Year"], y=df["full_results"])
+    df.loc[(df.MedianIncome == df.full_results), "full_results"] = None
 
-    trace1.update_traces(line=dict(color="black", width=3, dash="dash"))
-    # trace2.update_traces(line=dict(color="black", width=3))
+    trace1 = go.Scatter(
+        x=df["Year"],
+        y=df["full_results"],
+        name="Income Prediction",
+        mode="lines+markers",
+        text="-",
+        marker_color="black",
+    )
+    #     trace1 = px.line(x=df["Year"], y=df["full_results"])
+
+    #     trace1.update_traces(line=dict(color="black", width=3, dash="dash"))
+    #     # trace2.update_traces(line=dict(color="black", width=3))
+    #     trace1.update_traces(name='Accuracy on Training Set')
 
     fig = go.Figure()
     trace2 = go.Scatter(
@@ -149,7 +160,7 @@ def plot_arima_predictions(df, target):
         hoverinfo="text",
     )
     fig.add_traces(trace2)
-    fig.add_traces(trace1.data)
+    fig.add_traces(trace1)
     fig.add_vrect(
         x0=2019,
         x1=2022.5,
@@ -160,11 +171,26 @@ def plot_arima_predictions(df, target):
         annotation_position="left",
     )
     fig = format_active_layout(fig)
-    fig = format_active_axes(fig)
+    fig = format_active_axes(fig, units="SomeYears")
 
     fig.update_layout(
         showlegend=True,
-        title=dict(text="ARIMA Predicted Vs. Actual", font=dict(size=22),),
+        title=dict(
+            text=f"ARIMA Predicted Vs. Actual | {locale_options[locale]}",
+            font=dict(size=22),
+        ),
+    )
+    fig.update_layout(
+        legend=dict(
+            font_color="black",
+            title="",
+            orientation="h",
+            # yanchor="bottom",
+            # y=1.05,
+            # xanchor="left",
+            # x=0.18,
+            bgcolor=("rgba(0,0,0,0)"),
+        ),
     )
 
     return fig
@@ -268,35 +294,29 @@ def income_by_age_group(df, args):
 
     age_group_list = df.AgeGroup.unique().tolist()
 
+    subset = df[(df.AgeGroup != "overall")].copy()
+
     # Create List of Figure
-    traces = []
-    trace1 = px.bar(
-        x=df["Year"].unique(),
-        y=df[(df.AgeGroup == "overall")]["MedianIncome"],
-        opacity=0.3,
-    )
-    traces.append(trace1)
 
-    for age in age_group_list:
-        if age == "overall":
-            continue
-
-        trace = px.line(
-            x=df["Year"].unique(), y=df[(df.AgeGroup == age)]["MedianIncome"],
-        )
-
-        trace.update_traces(line=dict(color=color_map[age], width=3, dash="dash"))
-        trace.update_traces(name=age_groups[age])
-        traces.append(trace)
-
-    # Create Composite Figure
     fig = go.Figure(
-        data=traces[0].data
-        + traces[1].data
-        + traces[2].data
-        + traces[3].data
-        + traces[4].data
+        go.Scatter(
+            x=df["Year"].unique(),
+            y=df[(df.AgeGroup == "overall")]["MedianIncome"],
+            hoveron="points+fills",
+            fillcolor="lightgrey",
+            name="Overall Average",
+            fill="tozeroy",
+            line=dict(width=2, color="rgb(0, 0, 0)"),
+        )
     )
+
+    fig1 = px.line(
+        x=subset["Year"],
+        y=subset["MedianIncome"],
+        color=subset["AgeGroup"],
+        color_discrete_map=color_map,
+    )
+    fig.add_traces(fig1.data)
 
     # Add Rectangles
     max_year = df.dropna().Year.max()
@@ -305,7 +325,7 @@ def income_by_age_group(df, args):
             x0=2000,
             x1=2005,
             fillcolor="red",
-            opacity=0.3,
+            opacity=0.2,
             line_width=0,
             annotation_text="No Data",
             annotation_position="top left",
@@ -333,10 +353,10 @@ def income_by_age_group(df, args):
             font_color="black",
             title="",
             orientation="h",
-            yanchor="top",
-            y=1.10,
-            xanchor="left",
-            x=0.18,
+            # yanchor="top",
+            # y=1.13,
+            # xanchor="left",
+            # x=0.18,
             bgcolor=("rgba(0,0,0,0)"),
         ),
     )
@@ -405,10 +425,10 @@ def build_average_median_income(df):
         legend=dict(
             title="",
             orientation="h",
-            yanchor="top",
-            y=1.10,
-            xanchor="left",
-            x=0.18,
+            # yanchor="top",
+            # y=1.10,
+            # xanchor="left",
+            # x=0.18,
             bgcolor=("rgba(0,0,0,0)"),
         ),
     )
@@ -419,6 +439,15 @@ def build_average_median_income(df):
 
 def build_average_house_prices(df, args):
     df = df.drop_duplicates()
+
+    current_year = df.dropna().Year.max()
+    current_price = df.dropna().MedianHousePrice.tail(1).max()
+    min_price = df.dropna().MedianHousePrice.min()
+    current_text_price = "${:,.0f}".format(current_price)
+    current_date = df.dropna().Date.max()
+    text_date = dt.datetime.strftime(
+        dt.datetime.strptime(current_date, "%Y-%m-%d"), "%B %Y"
+    )
 
     fig = go.Figure()
 
@@ -440,6 +469,29 @@ def build_average_house_prices(df, args):
     fig.update_layout(
         title=dict(text=f"<b>Median House Price for {locale}<b>", font=dict(size=20),),
         showlegend=False,
+    )
+
+    anchor = "left" if current_year < 2007 else "right"
+    xanch = 30 if current_year < 2007 else -30
+    yanch = 0 if current_year < 2007 else 0
+    fig.add_annotation(
+        text=f"{text_date}<br>Median Price: {current_text_price}",
+        showarrow=True,
+        arrowhead=3,
+        arrowsize=1,
+        arrowwidth=2,
+        xref="x",
+        yref="y",
+        ayref="y domain",
+        axref="pixel",
+        ay=yanch,
+        ax=xanch,
+        x=current_date,
+        y=min_price / 2,
+        xanchor=anchor,
+        yanchor="middle",
+        align="right",
+        font=dict(size=14, color="black"),
     )
     fig = format_active_layout(fig)
     fig = format_active_axes(fig, min_range, max_range, "Date")
@@ -482,6 +534,45 @@ def build_income_line_chart(income_df):
     fig.update_xaxes(ticks="outside", tickwidth=1, ticklen=7, tickcolor="rgba(0,0,0,0)")
     fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
 
+    return fig
+
+
+def build_income_vs_house_price(year_income_hp):
+    # I think that if we do a baseline year in 2005, and then show a chart indicating how much each has moved
+    # from that baseline, it could be a powerful visual.
+
+    fig = px.line()
+    fig.add_scatter(
+        x=year_income_hp["Year"],
+        y=year_income_hp["MedianHousePrice"],
+        name="Median House Price",
+        line_width=3,
+    )
+    fig.add_scatter(
+        x=year_income_hp["Year"],
+        y=year_income_hp["MedianIncome"],
+        name="Median Income",
+        line_width=3,
+    )
+    fig.update_layout(
+        title=dict(
+            text=f"<b>Median House Prices vs. Median Income<b>", font=dict(size=20),
+        ),
+    )
+    fig = format_active_layout(fig)
+    fig = format_active_axes(fig, units="Year")
+    fig.update_layout(
+        legend=dict(
+            font_color="black",
+            title="",
+            orientation="h",
+            # yanchor="top",
+            # y=1.13,
+            # xanchor="left",
+            # x=0.18,
+            bgcolor=("rgba(0,0,0,0)"),
+        ),
+    )
     return fig
 
 
@@ -544,6 +635,7 @@ def format_map_menu(fig):
 
 
 def build_animated_map(df, base_map_style, scale, animate):
+
     customdata = np.stack((df["County"], df["MedianIncome"], df["AgeGroup"]), axis=-1)
 
     fig = px.choropleth_mapbox(
@@ -567,21 +659,54 @@ def build_animated_map(df, base_map_style, scale, animate):
     return fig
 
 
+def build_affordability_map(df, base_map_style, scale, animate):
+
+    customdata = np.stack(
+        (df["County"], df["MonthlyMortgage"], df["AgeGroup"]), axis=-1
+    )
+
+    fig = px.choropleth_mapbox(
+        df,
+        geojson=counties,
+        color="affordable",
+        locations="FIPS",
+        featureidkey="properties.FIPSSTCO",
+        center={"lat": 40.15, "lon": -74.421983},
+        mapbox_style=base_map_style,
+        zoom=6.5,
+        opacity=1,
+        # animation_frame=animate,
+        # range_color=scale,
+        # color_continuous_scale="jet",
+        hover_data=["County", "MonthlyMortgage", "AgeGroup"],
+    )
+    fig.update_traces(
+        hovertemplate="<b>County: %{customdata[0]}</b><br>Monthly Mortgage: %{customdata[1]:$,}<br>Age Group: %{customdata[2]}"
+    )
+    return fig
+
+
 def map_builder(
-    income_data_for_map,
+    generator,
     base_map_style,
     age_group,
     target_year,
     animate,
+    args,
     target="MedianIncome",
 ):
 
-    df = next(income_data_for_map)
-    df = df[(df[target] > 0)]
-    df = df.drop(columns=["Month", "MedianHousePrice"])
+    if not args:
+        df = next(generator)
+        df = df[(df[target] > 0)]
+        df = df.drop(columns=["Month", "MedianHousePrice"])
+
+    else:
+        df = generator.send(args)
 
     if animate == "animated":
         print("Building Animated Map")
+        map_title = f"Median Income (Animated) | {age_group}"
         df = df[(df.AgeGroup == age_group)]
         scale = [df[target].min(), df[target].max()]
         df.drop_duplicates(inplace=True)
@@ -589,13 +714,23 @@ def map_builder(
 
         fig = build_animated_map(df, base_map_style, scale, "Year")
         fig = format_map_menu(fig)
-    else:
+
+    elif animate == "static":
         print("Building Static Map")
-        print(target_year)
+        map_title = f"Median Income | {age_group} | {target_year}"
         df = df[(df.Year == target_year) & (df.AgeGroup == age_group)]
         scale = [df[target].min(), df[target].max()]
         df = df.drop_duplicates()
         fig = build_animated_map(df, base_map_style, scale, None)
+    elif animate == "static-affordability":
+        print("Building Static Affordability Map")
+        print(df)
+        map_title = f"Home Affordability | {age_group} | {target_year}"
+        df = df[(df.AgeGroup == age_group) & (df.Year == target_year)]
+        scale = None
+        animate = "static"
+        df.drop_duplicates(inplace=True)
+        fig = build_affordability_map(df, base_map_style, scale, animate)
 
     # if animate == 'animated':
     #     slider_data = fig['layout']['sliders'][0]
@@ -603,7 +738,7 @@ def map_builder(
 
     fig.update_layout(
         coloraxis_showscale=True,
-        title=dict(text=f"<b>{'Median Income'}<b>", font=dict(size=28)),
+        title=dict(text=f"<b>{map_title}<b>", font=dict(size=28)),
         margin={"r": 0, "t": 0, "l": 0, "b": 0, "autoexpand": True},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",

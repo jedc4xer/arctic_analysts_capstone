@@ -134,6 +134,28 @@ def highest_median_income():
 
     cols_to_keep = ["FIPS", "County", "Year", "MedianIncome", "AgeGroup"]
     filtered_df = master_df[cols_to_keep].copy()
+    return
+
+
+def income_vs_house_price():
+
+    data_gen = data_getter.dispatcher()
+    try:
+        final_table = next(data_gen)
+    except Exception as E:
+        print("Data Control Error: 7E15")
+
+    year_income = final_table[["Year", "MedianIncome"]].copy()
+    year_income = year_income.groupby(by=["Year"]).agg("mean")
+    year_income = year_income.reset_index()
+    year_hp = final_table[["Year", "MedianHousePrice"]].copy()
+    year_hp = year_hp.groupby(by=["Year"]).agg("mean")
+    year_hp = year_hp.reset_index()
+    year_income_hp = pd.merge(year_income, year_hp, on="Year", how="inner")
+    year_income_hp.reset_index()
+
+    while True:
+        yield year_income_hp
 
 
 # ARIMA DISPATCHER
@@ -142,7 +164,7 @@ def highest_median_income():
 
 def run_arima(master_df):
 
-    target, params = yield "Ready for Next"
+    target, params = yield "Started Arima"
     while True:
 
         filtered_data = arima.filter_data(master_df, target, params)
@@ -152,7 +174,7 @@ def run_arima(master_df):
         # yield graph_ready, adf_filtered_df, 'arima'
 
 
-# HELPER FUNCTIONS
+# ARIMA FUNCTIONS
 ####################################################
 
 
@@ -176,11 +198,15 @@ def get_model():
         filtered_df = filtered_df.dropna()
         filtered_df = filtered_df.drop_duplicates(subset=drop_subset)
 
-        model_list = os.listdir("model_dump")
+        old_path = "model_dump/old_model_dump"
+        new_path = "model_dump/"
+        model_list = os.listdir(new_path)
         target_model = [
-            _ for _ in model_list if (target in _ and params[0] in _ and params[1] in _)
+            _
+            for _ in model_list
+            if (target in _ and params[0] in _ and params[1] in _ and "pred" in _)
         ][0]
-        loaded_model = joblib.load("model_dump/" + target_model)
+        loaded_model = joblib.load(new_path + target_model)
 
         prediction_df = pd.DataFrame(loaded_model.forecast(10, alpha=0.05))
         prediction_df.reset_index(inplace=True)
@@ -193,34 +219,143 @@ def get_model():
             filtered_df, prediction_df, left_on="Year", right_on="Year", how="outer"
         )
 
-        combined_df["predicted_mean"] = combined_df["predicted_mean"].shift(-num_p)
-        ground_truth = combined_df[target].tolist()
-        predictions = combined_df["predicted_mean"].tolist()
-        new_items = []
-        breaker = False
-        for i, item in enumerate(predictions):
-            if not breaker:
-                ground = ground_truth[i]
-                if str(item) == "nan":
-                    new_items.append(ground)
-                else:
-                    breaker = True
-                    new_items.append(ground + item)
-            else:
-                try:
-                    new_items.append(new_items[-1] + item)
-                except:
-                    pass
-        combined_df["full_results"] = new_items
+        # combined_df["predicted_mean"] = combined_df["predicted_mean"].shift(-num_p)
+        # ground_truth = combined_df[target].tolist()
+        # predictions = combined_df["predicted_mean"].tolist()
+        # new_items = []
+        # breaker = False
+        # for i, item in enumerate(predictions):
+        #     if not breaker:
+        #         ground = ground_truth[i]
+        #         if str(item) == "nan":
+        #             new_items.append(ground)
+        #         else:
+        #             breaker = True
+        #             new_items.append(ground + item)
+        #     else:
+        #         try:
+        #             new_items.append(new_items[-1] + item)
+        #         except:
+        #             pass
+        # combined_df["full_results"] = new_items
+        combined_df["full_results"] = combined_df["predicted_mean"]
+        combined_df["full_results"].update("MedianIncome")
         combined_df["FIPS"] = fips
         combined_df["AgeGroup"] = age_group
         target, params = yield combined_df
 
 
-# HELPER FUNCTIONS
+# AFFORDABILITY CALCULATIONS
 ####################################################
 
 
-# What counties have the highest median income on average
+def calculate_affordability(master_df):
 
-# In what locations is home ownership most and least - han
+    # reading in predictions
+    path = "shapefiles/dat_cbo.csv"
+    df = pd.read_csv(path)
+
+    # Preparing
+    #########################
+    df["MedianIncome"].update(df["train_and_predicted"])
+    cleaned_predictions = df[(df.Year > 2019) & (df.Year < 2023)].drop(
+        columns=["train_and_predicted"]
+    )
+    cleaned_predictions["FIPS"] = cleaned_predictions["FIPS"].astype("str")
+
+    # Calculating monthly income
+    cleaned_predictions["MonthlyIncome"] = cleaned_predictions["MedianIncome"] / 12
+    cleaned_predictions.drop(columns=["MedianIncome"], inplace=True)
+
+    # Filtering master table to just the targeted data
+    target_df = master_df[(master_df.Year > 2019) & (master_df.Year < 2023)]
+    target_df = target_df[
+        ["FIPS", "Year", "AverageRate", "AveragePoints", "County", "MedianHousePrice"]
+    ]
+
+    # Merging predicting with actual
+    merged_tables = pd.merge(
+        cleaned_predictions,
+        target_df,
+        left_on=["Year", "FIPS"],
+        right_on=["Year", "FIPS"],
+        how="outer",
+    )
+    ##########################3
+    # Finished filtering
+
+    # Actual Calculator
+    # down_payment started as .12, mort_inc_ratio started as .25, term started as 30, tax_rate started as .0189
+    (
+        down_payment,
+        mort_inc_ratio,
+        term,
+        tax_rate,
+        time_frame,
+    ) = yield "Started Affordability Calculator"
+    while True:
+        print(down_payment, mort_inc_ratio, term, tax_rate, time_frame)
+        final_table = merged_tables.copy()
+        for row in final_table:
+            P = final_table["MedianHousePrice"] - (
+                final_table["MedianHousePrice"] * down_payment
+            )
+            r = final_table["AverageRate"] / 100
+            t = term
+            n = 12
+            monthly_tax = (final_table["MedianHousePrice"] * tax_rate) / 12
+            final_table["MonthlyMortgage"] = (
+                P
+                * (
+                    ((r / n) * pow((1 + (r / n)), (n * t)))
+                    / (pow((1 + r / n), (n * t)) - 1)
+                )
+            ) + monthly_tax
+
+        # mortgage to income ratio
+        final_table["mortgage_income_ratio"] = (
+            final_table["MonthlyMortgage"] / final_table["MonthlyIncome"]
+        )
+
+        # affordability determination
+        def affordable_condition(x):
+            if x <= mort_inc_ratio:
+                return "Yes"
+            elif np.isnan(x):
+                return "Missing"
+            else:
+                return "No"
+
+        final_table["affordable"] = final_table["mortgage_income_ratio"].apply(
+            affordable_condition
+        )
+
+        # Data Return Logic
+        if time_frame == "monthly":
+            final_table["MonthlyMortgage"] = final_table["MonthlyMortgage"].round(2)
+            down_payment, mort_inc_ratio, term, tax_rate, time_frame = yield final_table
+        else:
+            final_annual_df = (
+                final_table.groupby(by=["Year", "FIPS", "AgeGroup", "County"])[
+                    ["MedianHousePrice", "MonthlyIncome", "MonthlyMortgage"]
+                ]
+                .agg("mean")
+                .reset_index()
+            )
+
+            final_annual_df["mortgage_income_ratio"] = (
+                final_annual_df["MonthlyMortgage"] / final_annual_df["MonthlyIncome"]
+            )
+            final_annual_df["affordable"] = final_annual_df[
+                "mortgage_income_ratio"
+            ].apply(affordable_condition)
+            final_annual_df["MonthlyMortgage"] = final_annual_df[
+                "MonthlyMortgage"
+            ].round(2)
+            (
+                down_payment,
+                mort_inc_ratio,
+                term,
+                tax_rate,
+                time_frame,
+            ) = yield final_annual_df

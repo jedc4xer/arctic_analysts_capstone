@@ -1,14 +1,18 @@
-import new_data_control as new_data_con
-
-# import data_control as data_con
 import visual_control as viz
+import new_data_control as new_data_con
 import dash_bootstrap_components as dbc
-from dash import Input, Output, dcc, html, callback
-import functools
 from config import base_maps, age_groups
+from dash import Input, Output, dcc, html, callback
+
+arima_gen = None
+arima_gen = new_data_con.get_model()
+
+master_df = next(arima_gen)
 
 try:
     income_data_for_map = new_data_con.income_data()
+    affordability_gen = new_data_con.calculate_affordability(master_df)
+    print(next(affordability_gen))
 except Exception as E:
     print("Map Layout: Exception 1A", E)
 
@@ -84,7 +88,7 @@ MAP_LAYOUT = html.Div(
                 ),
                 dbc.Col(
                     dcc.Graph(
-                        id="map_page_map_2",
+                        id="map2",
                         # figure=mapfig2,
                         style={
                             "padding": "2px",
@@ -123,7 +127,37 @@ def modify_map(base_map_style, age_group, year, animate):
     if year is None:
         year = 2019
 
+    args = False
+
     map1 = viz.map_builder(
-        income_data_for_map, base_map_style, age_group, year, animate
+        income_data_for_map, base_map_style, age_group, year, animate, args
     )
     return map1
+
+
+@callback(
+    Output("map2", "figure"),
+    Input("base_map_style", "value"),
+    Input("age_dropdown", "value"),
+    Input("year_dropdown", "value"),
+    Input("animation_dropdown", "value"),
+)
+def modify_map2(base_map_style, age_group, year, animate):
+    if base_map_style is None:
+        base_map_style = "stamen-watercolor"
+
+    if age_group is None:
+        age_group = "25-44"
+
+    if animate is None:
+        animate = "static-affordability"
+
+    if year is None:
+        year = 2021
+    year = 2021
+
+    args = [0.12, 0.25, 30, 0.0189, "annual"]
+    map2 = viz.map_builder(
+        affordability_gen, base_map_style, age_group, year, animate, args
+    )
+    return map2

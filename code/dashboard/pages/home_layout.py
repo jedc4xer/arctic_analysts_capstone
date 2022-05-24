@@ -45,7 +45,7 @@ PAGE_TEXT_CONTENT_1 = """
 Owning a home is a long-term goal for many Americans, and the trends of recent years have caused many to question their abilitity for purchase a home as prices have increased rapidly. In this analysis, we looked at affordability specifically in New Jersey by at the county level. We will use current house prices, the average mortgage interest rate, and forecasted Median Income to classify counties as affordable or not affordable.
 """
 
-PAGE_TEXT_CONTENT_2 = "The factors that we considered for this analysis are:"
+PAGE_TEXT_CONTENT_2 = "The factors that we considered for this analysis were:"
 
 LIST = """
 * Median Income
@@ -88,7 +88,7 @@ HOMEPAGE_LAYOUT = html.Div(
                                             LIST,
                                             style={
                                                 "padding": "10px",
-                                                "box-shadow": "1px 3px 5px 7px lightgrey",
+                                                "box-shadow": "1px 3px 5px 7px lightblue",
                                             },
                                         ),
                                     ),
@@ -106,7 +106,10 @@ HOMEPAGE_LAYOUT = html.Div(
                             dbc.Row(html.P(PAGE_TEXT_CONTENT_5), className="text-left"),
                         ]
                     ),
-                    style={"padding": "10px", "box-shadow": shadow},
+                    style={
+                        "padding": "10px",
+                        "box-shadow": "1px 7px 5px 7px lightgrey",
+                    },
                 ),
                 dbc.Col(width="3"),
             ],
