@@ -143,7 +143,6 @@ def evaluate_models(df, p_values, d_values, q_values):
 
 
 def get_adf(df, target):
-    print("in adf")
     df["diff_1"] = df[target].diff()
     df["diff_2"] = df[target].diff().diff()
 
