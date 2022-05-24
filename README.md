@@ -10,8 +10,7 @@ Introduction:
     - Mortgage Rates
     
 How to run the script:
-
-    In Terminal:
+    
     ```
     cd arctic_analysts_capstone/code/dashboard
     python dashboard_control.py
