@@ -232,6 +232,7 @@ def control_arima(master_table, target, params):
         prediction_periods = 10
     else:
         prediction_periods = int(filtered_df.shape[0] * 0.1)
+        
     predictions, y_train, y_test = ARIMA_predict(
         filtered_df, best_col, best_arima, 10, target, params
     )

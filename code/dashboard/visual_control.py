@@ -821,7 +821,6 @@ def map_builder(
         fig = build_animated_map(df, base_map_style, scale, None)
     elif animate == "static-affordability":
         print("Building Static Affordability Map")
-        print(df)
         map_title = f"Home Affordability | {age_group} | {target_year}"
         df = df[(df.AgeGroup == age_group) & (df.Year == target_year)]
         scale = None
