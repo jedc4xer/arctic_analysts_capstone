@@ -65,12 +65,9 @@ MAP_LAYOUT = html.Div(
                     ),
                     width=1,
                 ),
-                dbc.Col(
-#                     dcc.Input(
-#                         id="input_{}.format(_)", 
-#                         type=_,
-                        
-                        width=4),
+                dbc.Col([
+                    dcc.Input(id='range', type='number', min=2, max=10, step=1)],
+                    width=4),
                     
                 dbc.Col(width=4),
             ]

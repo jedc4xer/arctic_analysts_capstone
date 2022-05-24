@@ -261,8 +261,8 @@ def desparse_affordability(df):
 
 def calculate_affordability(master_df):
     
-    while True:
-        desparse_affordability(master_df)
+    # while True:
+    #     desparse_affordability(master_df)
     
     
     # reading in predictions
