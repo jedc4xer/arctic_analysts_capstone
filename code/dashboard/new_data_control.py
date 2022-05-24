@@ -122,21 +122,7 @@ def income_data():
     ]
     while True:
         yield master_df
-
-
-# STATIC DATA RETURN
-####################################################
-
-
-def highest_median_income():
-    data_gen = data_getter.dispatcher()
-    master_df = next(data_gen)
-
-    cols_to_keep = ["FIPS", "County", "Year", "MedianIncome", "AgeGroup"]
-    filtered_df = master_df[cols_to_keep].copy()
-    return
-
-
+        
 def income_vs_house_price():
 
     data_gen = data_getter.dispatcher()
@@ -156,6 +142,22 @@ def income_vs_house_price():
 
     while True:
         yield year_income_hp
+
+
+# STATIC DATA RETURN
+####################################################
+
+
+def highest_median_income():
+    data_gen = data_getter.dispatcher()
+    master_df = next(data_gen)
+
+    cols_to_keep = ["FIPS", "County", "Year", "MedianIncome", "AgeGroup"]
+    filtered_df = master_df[cols_to_keep].copy()
+    return
+
+
+
 
 
 # ARIMA DISPATCHER
@@ -250,9 +252,19 @@ def get_model():
 # AFFORDABILITY CALCULATIONS
 ####################################################
 
+def desparse_affordability(df):
+    
+    print(df)
+    time.sleep(5)
+    return
+
 
 def calculate_affordability(master_df):
-
+    
+    while True:
+        desparse_affordability(master_df)
+    
+    
     # reading in predictions
     path = "shapefiles/dat_cbo.csv"
     df = pd.read_csv(path)
@@ -272,7 +284,7 @@ def calculate_affordability(master_df):
     # Filtering master table to just the targeted data
     target_df = master_df[(master_df.Year > 2019) & (master_df.Year < 2023)]
     target_df = target_df[
-        ["FIPS", "Year", "AverageRate", "AveragePoints", "County", "MedianHousePrice"]
+        ["FIPS", "Year", 'Month', "AverageRate", "AveragePoints", "County", "MedianHousePrice"]
     ]
 
     # Merging predicting with actual
@@ -288,6 +300,11 @@ def calculate_affordability(master_df):
 
     # Actual Calculator
     # down_payment started as .12, mort_inc_ratio started as .25, term started as 30, tax_rate started as .0189
+    
+    # TODO - We need to run the affordability calculation on all years, and not just the predicted
+    # Then we can have a chart showing how affordability changed over time.
+    # To do this, we may also need to use months somehow
+    # it should be simple because we just keep the months when we merge in the data
     (
         down_payment,
         mort_inc_ratio,
@@ -296,7 +313,6 @@ def calculate_affordability(master_df):
         time_frame,
     ) = yield "Started Affordability Calculator"
     while True:
-        print(down_payment, mort_inc_ratio, term, tax_rate, time_frame)
         final_table = merged_tables.copy()
         for row in final_table:
             P = final_table["MedianHousePrice"] - (
