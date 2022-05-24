@@ -168,8 +168,9 @@ def run_arima(master_df):
     while True:
 
         filtered_data = arima.filter_data(master_df, target, params)
-        adf_filtered_df, best_col, num_diffs = arima.get_adf(filtered_data, target)
-        target, params = yield adf_filtered_df
+        adf_filtered_df, best_col, num_diffs, results = arima.get_adf(filtered_data, target)
+
+        target, params = yield adf_filtered_df, results
         # graph_ready, export_ready = arima.dispatcher(master_df, target, params)
         # yield graph_ready, adf_filtered_df, 'arima'
 
@@ -198,13 +199,13 @@ def get_model():
         filtered_df = filtered_df.dropna()
         filtered_df = filtered_df.drop_duplicates(subset=drop_subset)
 
-        old_path = "model_dump/old_model_dump"
+        old_path = "model_dump/old_model_dump" # Requires undifferencing
         new_path = "model_dump/"
         model_list = os.listdir(new_path)
         target_model = [
             _
             for _ in model_list
-            if (target in _ and params[0] in _ and params[1] in _ and "pred" in _)
+            if (target in _ and params[0] in _ and params[1] in _ and "train" in _)
         ][0]
         loaded_model = joblib.load(new_path + target_model)
 
@@ -239,9 +240,10 @@ def get_model():
         #             pass
         # combined_df["full_results"] = new_items
         combined_df["full_results"] = combined_df["predicted_mean"]
-        combined_df["full_results"].update("MedianIncome")
+        combined_df["full_results"].update(combined_df["MedianIncome"])
         combined_df["FIPS"] = fips
         combined_df["AgeGroup"] = age_group
+
         target, params = yield combined_df
 
 

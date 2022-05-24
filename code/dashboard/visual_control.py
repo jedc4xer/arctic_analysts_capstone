@@ -75,6 +75,8 @@ def format_active_axes(fig, min_range=None, max_range=None, units=None):
     if units == "Year":
         fig.update_xaxes(range=[2000, 2022])
     elif units == "SomeYears":
+        fig.update_xaxes(range=[2005, 2020])
+    elif units == "ForArima":
         fig.update_xaxes(range=[2005, 2022])
 
     fig.update_yaxes(
@@ -119,11 +121,12 @@ def blank():
 ############################################
 
 
-def arima_visual_controller(df, target, params, differenced):
+def arima_visual_controller(df, target, params, differenced, results):
 
     try:
         fig2 = plot_arima_predictions(df, target, params[0])
-        fig = build_differencing_chart(differenced, target)
+        fig = build_differencing_chart(differenced, target, results)
+        
     except Exception as E:
         print(E)
     return fig, fig2
@@ -132,14 +135,15 @@ def arima_visual_controller(df, target, params, differenced):
 def plot_arima_predictions(df, target, locale):
 
     df["Year"] = df.Year.astype("int")
-    df.loc[(df.MedianIncome == df.full_results), "full_results"] = None
-
+    # start_year = df.loc[(df.MedianIncome == df.full_results), "Year"]
+    # print(start_year)
+    df.loc[(df.Year < 2019), 'full_results'] = None
+    
     trace1 = go.Scatter(
         x=df["Year"],
         y=df["full_results"],
         name="Income Prediction",
         mode="lines+markers",
-        text="-",
         marker_color="black",
     )
     #     trace1 = px.line(x=df["Year"], y=df["full_results"])
@@ -167,16 +171,17 @@ def plot_arima_predictions(df, target, locale):
         fillcolor="green",
         opacity=0.3,
         line_width=0,
-        annotation_text="Goal Data",
+        annotation_text="Predicted Period",
         annotation_position="left",
     )
     fig = format_active_layout(fig)
-    fig = format_active_axes(fig, units="SomeYears")
-
+    fig = format_active_axes(fig, units="ForArima")
+    age_group = df.AgeGroup.unique().tolist()[0]
+    
     fig.update_layout(
         showlegend=True,
         title=dict(
-            text=f"ARIMA Predicted Vs. Actual | {locale_options[locale]}",
+            text=f"ARIMA Predicted Median Income vs. Actual<br>    {locale_options[locale]} | Age Group: {age_group}",
             font=dict(size=22),
         ),
     )
@@ -196,16 +201,17 @@ def plot_arima_predictions(df, target, locale):
     return fig
 
 
-def build_differencing_chart(df, target):
+def build_differencing_chart(df, target, results):
 
     df.index = df.index.astype("str")
 
     fig = make_subplots(rows=3, cols=1)
-
+    
     fig.append_trace(
         go.Scatter(x=df["Year"], y=df[target], marker=dict(color="black", size=3)),
         row=1,
         col=1,
+        
     )
 
     fig.append_trace(
@@ -220,15 +226,106 @@ def build_differencing_chart(df, target):
         col=1,
     )
 
-    fig = format_active_layout(fig)
-
-    fig = format_active_axes(fig, min_range=None, max_range=None, units="False")
-
+    
+    
+    fips = df.FIPS.unique().tolist()[0]
+    age_group = df.AgeGroup.unique().tolist()[0]
     fig.update_layout(
-        title=dict(text="Differenced Data", font=dict(size=22),),
+        title=dict(text=f"Differenced Data | {locale_options[fips]} | Age Group: {age_group}", font=dict(size=22),),
         margin={"r": 10, "t": 50, "l": 5, "b": 25},
         showlegend=False,
     )
+    results_dict = results[0]
+    adf_text = 'Not Differenced'
+    adf = round(results_dict['ADF Statistic'],3)
+    pval = round(results_dict['P-Value'],9)
+    display_string = f'{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}'
+    
+    if pval < .05:
+        font_col = 'green'
+        display_string = '<b>' + display_string + '<b>'
+    else:
+        font_col = 'black'
+        
+    data_mean = df[target].mean()
+    data_max = df[target].max()
+    fig.add_annotation(
+        dict(
+            # x=1, y=1, # annotation point
+            #x=df['Year'].mean(),
+            y=data_mean + (data_max-data_mean),
+            xref='x1', 
+            yref='y1',
+            text=display_string,
+            showarrow=False,
+            ax=0,
+            ay=-40,
+            font = {'color': font_col}
+        ),
+    )
+    
+    results_dict = results[1]
+    adf_text = 'Differenced Once'
+    adf = round(results_dict['ADF Statistic'],3)
+    pval = round(results_dict['P-Value'],9)
+    display_string = f'{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}'
+    
+    if pval < .05:
+        font_col = 'green'
+        display_string = '<b>' + display_string + '<b>'
+    else:
+        font_col = 'black'
+        
+    data_mean = df['diff_1'].mean()
+    data_max = df['diff_1'].max()
+    
+    fig.add_annotation(
+        dict(
+            # x=1, y=1, # annotation point
+            y=data_mean + (data_max-data_mean),
+            xref='x1', 
+            yref='y2',
+            text=display_string,
+            showarrow=False,
+            ax=0,
+            ay=-40,
+            font = {'color': font_col}
+        ),
+    )
+    
+    results_dict = results[2]
+    adf_text = 'Differenced Twice'
+    adf = round(results_dict['ADF Statistic'],3)
+    pval = round(results_dict['P-Value'],9)
+    display_string = f'{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}'
+    
+    if pval < .05:
+        font_col = 'green'
+        display_string = '<b>' + display_string + '<b>'
+    else:
+        font_col = 'black'
+        
+    data_mean = df['diff_2'].mean()
+    data_max = df['diff_2'].max()
+    
+    fig.add_annotation(
+        dict(
+            # x=1, y=1, # annotation point
+            y=data_mean + (data_max-data_mean),
+            xref='x1', 
+            yref='y3',
+            text=display_string,
+            showarrow=False,
+            ax=0,
+            ay=-40,
+            font = {'color': font_col}
+        ),
+    )
+    fig = format_active_layout(fig)
+
+    fig = format_active_axes(fig, min_range=None, max_range=None, units="SomeYears")
+    fig.update_layout()
+    
     return fig
 
 
