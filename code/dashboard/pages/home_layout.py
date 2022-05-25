@@ -72,7 +72,7 @@ HOMEPAGE_LAYOUT = html.Div(
         # dbc.Row(html.H1("New Jersey Housing Analysis"), className="text-center"),
         dbc.Row(
             [
-                dbc.Col(width="3"),
+                dbc.Col(width="1"),
                 dbc.Col(
                     html.Div(
                         [
@@ -111,7 +111,13 @@ HOMEPAGE_LAYOUT = html.Div(
                         "box-shadow": "1px 7px 5px 7px lightgrey",
                     },
                 ),
-                dbc.Col(width="3"),
+                dbc.Col(
+                    html.Div(
+                        dbc.Row(
+                            html.P('This is where some summary Stats can go.')
+                        )
+                    ),
+                    width="4"),
             ],
             # className="h-25",#
         ),
