@@ -148,19 +148,22 @@ def model_builder(n, feature_value, locale_value, age_group, interval):
     try:
         differenced, results = adf_gen.send([feature_value, params])
     except Exception as E:
-        print('Differenced Data Generator Failure', E)
-        
+        print("Differenced Data Generator Failure", E)
+
     try:
         df = arima_gen.send([feature_value, params])
+        if df is None:
+            print("No Model Found")
+            return viz.blank(), viz.blank(), new_interval
     except Exception as E:
-        print('Arima Generator Failure', E)
-        
+        print("Arima Generator Failure", E)
+
     try:
         fig1, fig2 = viz.arima_visual_controller(
             df, feature_value, params, differenced, results
         )
     except Exception as E:
-        print('Model Visual Creation Failure', E)
-        return viz.blank(), viz.blank()
+        print("Model Visual Creation Failure", E)
+        return viz.blank(), viz.blank(), new_interval
 
     return fig1, fig2, new_interval

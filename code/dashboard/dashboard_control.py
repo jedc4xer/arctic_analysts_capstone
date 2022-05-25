@@ -54,7 +54,7 @@ def render_page_content(pathname):
     elif pathname == "/page-3":
         print("Picked ML Model Page")
         return MODEL_LAYOUT
-    
+
     elif pathname == "/page-4":
         print("Picked About Us")
         return ABOUT_US_LAYOUT
@@ -72,5 +72,5 @@ def render_page_content(pathname):
 
 
 if __name__ == "__main__":
-    app.run_server()
-    #app.run_server(debug=True)
+    # app.run_server()
+    app.run_server(debug=True)

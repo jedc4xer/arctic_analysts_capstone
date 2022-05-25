@@ -172,6 +172,7 @@ def run_arima(master_df):
     while True:
 
         filtered_data = arima.filter_data(master_df, target, params)
+
         adf_filtered_df, best_col, num_diffs, results = arima.get_adf(
             filtered_data, target
         )
@@ -194,14 +195,14 @@ def get_model():
 
     target, params = yield master_df
     while True:
+        master_copy = master_df.copy()
 
-        if target == "MedianIncome":
-            fips, age_group = params
-            cols_to_keep = ["FIPS", "Year", "MedianIncome", "AgeGroup"]
-            filtered_df = master_df[
-                (master_df["FIPS"] == fips) & (master_df.AgeGroup == age_group)
-            ].copy()
-            drop_subset = "Year"
+        fips, age_group = params
+        cols_to_keep = ["FIPS", "Year", "MedianIncome", "AgeGroup"]
+        filtered_df = master_copy[(master_copy["FIPS"] == fips)]
+        filtered_df = filtered_df[(filtered_df.AgeGroup == age_group)]
+
+        drop_subset = "Year"
 
         filtered_df = filtered_df[[_ for _ in cols_to_keep]].copy()
         filtered_df = filtered_df.dropna()
@@ -209,24 +210,32 @@ def get_model():
 
         old_path = "model_dump/old_model_dump"  # Requires undifferencing
         new_path = "model_dump/"
+
         model_list = os.listdir(new_path)
-        target_model = [
+        target_models = [
             _
             for _ in model_list
-            if (target in _ and params[0] in _ and params[1] in _ and "train" in _)
-        ][0]
-        loaded_model = joblib.load(new_path + target_model)
+            if (target in _ and params[0] in _ and params[1] in _ and "pred" in _)
+        ]
+        if len(target_models) == 0:
+            found_model = False
+        else:
+            target_model = target_models[0]
+            found_model = True
 
-        prediction_df = pd.DataFrame(loaded_model.forecast(10, alpha=0.05))
-        prediction_df.reset_index(inplace=True)
-        prediction_df.rename(columns={"index": "Year"}, inplace=True)
-        prediction_df["Year"] = prediction_df["Year"].astype("str")
+        if found_model:
+            loaded_model = joblib.load(new_path + target_model)
 
-        filtered_df["Year"] = filtered_df["Year"].astype("str")
+            prediction_df = pd.DataFrame(loaded_model.forecast(10, alpha=0.05))
+            prediction_df.reset_index(inplace=True)
+            prediction_df.rename(columns={"index": "Year"}, inplace=True)
+            prediction_df["Year"] = prediction_df["Year"].astype("str")
 
-        combined_df = pd.merge(
-            filtered_df, prediction_df, left_on="Year", right_on="Year", how="outer"
-        )
+            filtered_df["Year"] = filtered_df["Year"].astype("str")
+
+            combined_df = pd.merge(
+                filtered_df, prediction_df, left_on="Year", right_on="Year", how="outer"
+            )
 
         # This code is needed if using the old models.
         ##############################################3
@@ -249,13 +258,15 @@ def get_model():
         #         except:
         #             pass
         # combined_df["full_results"] = new_items
+        if found_model:
+            combined_df["full_results"] = combined_df["predicted_mean"]
+            combined_df["full_results"].update(combined_df["MedianIncome"])
+            combined_df["FIPS"] = fips
+            combined_df["AgeGroup"] = age_group
 
-        combined_df["full_results"] = combined_df["predicted_mean"]
-        combined_df["full_results"].update(combined_df["MedianIncome"])
-        combined_df["FIPS"] = fips
-        combined_df["AgeGroup"] = age_group
-
-        target, params = yield combined_df
+            target, params = yield combined_df
+        else:
+            target, params = yield None
 
 
 #################################
