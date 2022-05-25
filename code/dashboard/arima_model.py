@@ -58,12 +58,15 @@ def filter_data(df, which, args):
         filtered_df.drop_duplicates(inplace=True)
 
     if which == "MedianIncome":
+
         filtered_df["new_index"] = filtered_df.Year.copy()
         filtered_df["new_index"] = filtered_df["new_index"].apply(
             lambda x: dt.datetime.strptime(str(x), "%Y")
         )
+
         filtered_df.set_index("new_index", inplace=True)
         filtered_df.index = filtered_df.index.to_period("Y")
+
     else:
         filtered_df["new_index"] = filtered_df.apply(
             lambda row: convert_to_date(row.Year, row.Month), axis=1
@@ -128,13 +131,13 @@ def get_adf(df, target):
     df["diff_2"] = df[target].diff().diff()
 
     cols_to_check = [target, "diff_1", "diff_2"]  # ,'diff_3']
-    
+
     if target != "MedianIncome":
         df["diff_12"] = df[target].diff(periods=12)
         cols_to_check = [target, "diff_12"]
     results = []
     best_adf = 1000000000
-    best_col = 'diff_2'
+    best_col = "diff_2"
     num_diffs = 1
     for i, col in enumerate(cols_to_check):
         adf_result = adfuller(df[col].dropna())

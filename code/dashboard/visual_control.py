@@ -97,15 +97,13 @@ def format_active_axes(fig, min_range=None, max_range=None, units=None):
         fig.update_yaxes(
             range=[min_range - (min_range * 0.1), max_range + (max_range * 0.1)],
         )
-    elif units == 'ForArima':
+    elif units == "ForArima":
 
         try:
-            fig.update_yaxes(
-                range=[0,max_range + (max_range * .20)]
-            )
+            fig.update_yaxes(range=[0, max_range + (max_range * 0.20)])
         except Exception as E:
             print(E)
-            
+
     return fig
 
 
@@ -118,10 +116,10 @@ def blank():
     fig = px.scatter()
     fig = format_active_axes(fig)
     fig = format_active_layout(fig)
-    text1 = 'Hmmm, this is unfortunate.<br><br> We wanted to show you something,<br>'
-    text2 = 'but we are having trouble finding it right now!<br><br>'
-    text3 = 'Please be patient while we search the house.'
-    
+    text1 = "Hmmm, this is unfortunate.<br><br> We wanted to show you something,<br>"
+    text2 = "but we are having trouble finding it right now!<br><br>"
+    text3 = "Please be patient while we search the house."
+
     fig.add_annotation(
         dict(
             # xref="x1",
@@ -130,7 +128,7 @@ def blank():
             showarrow=False,
             # ax=0,
             # ay=-40,
-            font={"color": 'black', 'size': 15},
+            font={"color": "black", "size": 15},
         ),
     )
     return fig
@@ -146,13 +144,13 @@ def arima_visual_controller(df, target, params, differenced, results):
     try:
         fig = build_differencing_chart(differenced, target, results)
     except Exception as E:
-        print('Differencing Error: ', E)
+        print("Differencing Error: ", E)
         fig = blank()
-    
+
     try:
         fig2 = plot_arima_predictions(df, target, params[0])
     except Exception as E:
-        print('Prediction Error: ', E)
+        print("Prediction Error: ", E)
         fig2 = blank()
 
     return fig, fig2
@@ -197,13 +195,13 @@ def plot_arima_predictions(df, target, locale):
         annotation_text="Predicted Period",
         annotation_position="left",
     )
-    if df['MedianIncome'].max() >= df['full_results'].max():
-        max_range = df['MedianIncome'].max()
+    if df["MedianIncome"].max() >= df["full_results"].max():
+        max_range = df["MedianIncome"].max()
     else:
-        max_range = df['full_results'].max()
-        
+        max_range = df["full_results"].max()
+
     fig = format_active_layout(fig)
-    fig = format_active_axes(fig, max_range = max_range, units="ForArima")
+    fig = format_active_axes(fig, max_range=max_range, units="ForArima")
     age_group = df.AgeGroup.unique().tolist()[0]
 
     fig.update_layout(
@@ -218,7 +216,7 @@ def plot_arima_predictions(df, target, locale):
             font_color="black", title="", orientation="h", bgcolor=("rgba(0,0,0,0)"),
         ),
     )
-
+    fig.update_layout(hovermode="x unified")
     return fig
 
 
@@ -342,7 +340,8 @@ def build_differencing_chart(df, target, results):
     fig = format_active_layout(fig)
 
     fig = format_active_axes(fig, min_range=None, max_range=None, units="SomeYears")
-    fig.update_layout()
+    fig.update_xaxes(showspikes=True)
+    fig.update_yaxes(showspikes=True)
 
     return fig
 
@@ -464,6 +463,8 @@ def income_by_age_group(df, args):
     # Send out for final formatting
     fig = format_active_layout(fig)
     fig = format_active_axes(fig, min_range, max_range, "Year")
+    fig.update_traces(hovertemplate=None)
+    fig.update_layout(hovermode="x")
     return fig
 
 
@@ -581,6 +582,7 @@ def build_average_house_prices(df, args):
     )
     fig = format_active_layout(fig)
     fig = format_active_axes(fig, min_range, max_range, "Date")
+    fig.update_layout(hovermode="x unified")
     return fig
 
 
@@ -620,6 +622,7 @@ def build_income_vs_house_price(year_income_hp):
             bgcolor=("rgba(0,0,0,0)"),
         ),
     )
+    fig.update_layout(hovermode="x unified")
     return fig
 
 
@@ -627,30 +630,48 @@ def build_income_vs_house_price(year_income_hp):
 # MAP VISUALIZATIONS MENU FORMATTING
 #################################
 
+
 def build_table_for_data(df):
-    df.columns = ['Year', 'Age','County','House Price','Income','Mortgage','Mort/Inc Ratio', 'Affordable']
-    
+    df.columns = [
+        "Year",
+        "Age",
+        "County",
+        "House Price",
+        "Income",
+        "Mortgage",
+        "Mort/Inc Ratio",
+        "Affordable",
+    ]
+
     def clean_column(val, rule):
-        if rule == 'standard':
+        if rule == "standard":
             val = "${:,.0f}".format(val)
-        elif rule == 'float':
+        elif rule == "float":
             val = val * 100
             val = "{:.2f}%".format(val)
         return val
-    
-    df['House Price'] = df['House Price'].apply(lambda x: clean_column(x, 'standard'))
-    df['Income'] = df['Income'].apply(lambda x: clean_column(x, 'standard'))
-    df['Mortgage'] = df['Mortgage'].apply(lambda x: clean_column(x, 'standard'))
-    df['Mort/Inc Ratio'] = df['Mort/Inc Ratio'].apply(lambda x: clean_column(x, 'float'))
-    
-    fig = go.Figure(data=[go.Table(
-        header=dict(values=list(df.columns),
-                    fill_color='paleturquoise',
-                    align='left'),
-        cells=dict(values=[df[_] for _ in df.columns],
-                   fill_color='lavender',
-                   align='left'))
-    ])
+
+    df["House Price"] = df["House Price"].apply(lambda x: clean_column(x, "standard"))
+    df["Income"] = df["Income"].apply(lambda x: clean_column(x, "standard"))
+    df["Mortgage"] = df["Mortgage"].apply(lambda x: clean_column(x, "standard"))
+    df["Mort/Inc Ratio"] = df["Mort/Inc Ratio"].apply(
+        lambda x: clean_column(x, "float")
+    )
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(
+                    values=list(df.columns), fill_color="paleturquoise", align="left"
+                ),
+                cells=dict(
+                    values=[df[_] for _ in df.columns],
+                    fill_color="lavender",
+                    align="left",
+                ),
+            )
+        ]
+    )
     return fig
 
 
@@ -733,27 +754,49 @@ def build_affordability_map(df, base_map_style, scale, animate):
 
     for locale in locale_options:
         if locale not in df.FIPS.unique().tolist():
-            new_row = [None, locale, None, locale_options[locale], 0, 0, 0, 0, 'Missing']
+            new_row = [
+                None,
+                locale,
+                None,
+                locale_options[locale],
+                0,
+                0,
+                0,
+                0,
+                "Missing",
+            ]
             columns = df.columns.tolist()
             new_row = zip(columns, new_row)
             new_row = {val[0]: val[1] for val in new_row}
-            temp_df = pd.DataFrame(new_row, index = [1])
+            temp_df = pd.DataFrame(new_row, index=[1])
 
             df = pd.concat([df, temp_df])
 
-    df['Year'] = df['Year'].dropna().tolist()[0]
-    df['AgeGroup'] = df['AgeGroup'].dropna().tolist()[0]
+    df["Year"] = df["Year"].dropna().tolist()[0]
+    df["AgeGroup"] = df["AgeGroup"].dropna().tolist()[0]
 
     colors = {"Yes": "#1D9A6C", "No": "#FF1493", "Missing": "#73666D"}
-    
+
     customdata = np.stack(
-        (df["County"], df["MonthlyMortgage"], 
-         df["AgeGroup"], df['MedianHousePrice'], 
-         df['MonthlyIncome'], df['mortgage_income_ratio']), axis=-1
+        (
+            df["County"],
+            df["MonthlyMortgage"],
+            df["AgeGroup"],
+            df["MedianHousePrice"],
+            df["MonthlyIncome"],
+            df["mortgage_income_ratio"],
+        ),
+        axis=-1,
     )
-    
-    hover_data = ["County", "MonthlyMortgage", "AgeGroup", 'MedianHousePrice', 
-         'MonthlyIncome', 'mortgage_income_ratio']
+
+    hover_data = [
+        "County",
+        "MonthlyMortgage",
+        "AgeGroup",
+        "MedianHousePrice",
+        "MonthlyIncome",
+        "mortgage_income_ratio",
+    ]
     try:
         fig = px.choropleth_mapbox(
             df,
@@ -770,18 +813,28 @@ def build_affordability_map(df, base_map_style, scale, animate):
         )
     except Exception as E:
         print(E)
-    
-    ht1 = '<b>%{customdata[0]}</b>'
-    ht2 = 'Monthly Mortgage: %{customdata[1]:$,.0f}'
-    ht3 = 'Age Group: %{customdata[2]}'
-    ht4 = 'Median House Price: %{customdata[3]:$,.0f}'
-    ht5 = 'Monthly Income: %{customdata[4]:$,.0f}'
-    ht6 = 'Mort/Inc Ratio: %{customdata[5]:,.2%}'
-    spacer1='<br>'
-    spacer2='<br><br>'
-   
+
+    ht1 = "<b>%{customdata[0]}</b>"
+    ht2 = "Monthly Mortgage: %{customdata[1]:$,.0f}"
+    ht3 = "Age Group: %{customdata[2]}"
+    ht4 = "Median House Price: %{customdata[3]:$,.0f}"
+    ht5 = "Monthly Income: %{customdata[4]:$,.0f}"
+    ht6 = "Mort/Inc Ratio: %{customdata[5]:,.2%}"
+    spacer1 = "<br>"
+    spacer2 = "<br><br>"
+
     fig.update_traces(
-        hovertemplate= ht1 + spacer1 + ht3 + spacer2 + ht4 + spacer1 + ht2 + spacer1 + ht5 + spacer1 + ht6
+        hovertemplate=ht1
+        + spacer1
+        + ht3
+        + spacer2
+        + ht4
+        + spacer1
+        + ht2
+        + spacer1
+        + ht5
+        + spacer1
+        + ht6
     )
     return fig
 
@@ -796,7 +849,7 @@ def map_builder(
     target="MedianIncome",
 ):
     map_mode = animate
-    
+
     if not args:
         df = next(generator)
         df = df[(df[target] > 0)]
@@ -821,22 +874,21 @@ def map_builder(
         df = df.drop_duplicates()
         fig = build_animated_map(df, base_map_style, scale, None)
 
-        
-    elif (animate == "static-affordability" or animate == 'static_table'):
+    elif animate == "static-affordability" or animate == "static_table":
         map_title = f"Home Affordability | {age_group} | {target_year}"
         df = df[(df.AgeGroup == age_group) & (df.Year == target_year)]
         scale = None
         animate = "static"
         df.drop_duplicates(inplace=True)
-        if (target_year > 2019 and map_mode == 'static_table'):
-            df.replace([np.inf, -np.inf], np.nan, inplace = True)
-            df.dropna(inplace = True)
-            df = df.drop(columns = ['FIPS'])
+        if target_year > 2019 and map_mode == "static_table":
+            df.replace([np.inf, -np.inf], np.nan, inplace=True)
+            df.dropna(inplace=True)
+            df = df.drop(columns=["FIPS"])
             fig = build_table_for_data(df)
         else:
             fig = build_affordability_map(df, base_map_style, scale, animate)
 
-    font_color='white' if base_map_style == 'carto-darkmatter' else 'black'
+    font_color = "white" if base_map_style == "carto-darkmatter" else "black"
     fig.update_layout(
         coloraxis_showscale=True,
         title=dict(text=f"<b>{map_title}<b>", font=dict(size=28)),
@@ -846,7 +898,7 @@ def map_builder(
         font_color=font_color,
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
     )
-    if map_mode not in ["static-affordability", 'static_table']:
+    if map_mode not in ["static-affordability", "static_table"]:
         fig.update_layout(
             title_y=0.96,
             title_x=0.05,
@@ -864,7 +916,7 @@ def map_builder(
             ),
         )
 
-    if map_mode in ["static-affordability", 'static_table']:
+    if map_mode in ["static-affordability", "static_table"]:
         fig.update_layout(
             title_y=0.96,
             title_x=0.05,
@@ -879,9 +931,9 @@ def map_builder(
                 title=dict(text="Is the County Affordable?"),
             ),
         )
-    if map_mode == 'static_table':
+    if map_mode == "static_table":
         fig.update_layout(
-            title = '',
+            title="",
             title_text="To view the median income map again, set the year to less than 2020.",
             margin={"r": 0, "t": 45, "l": 0, "b": 0, "autoexpand": True},
         )
@@ -994,7 +1046,6 @@ def map_builder(
 #     fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
 
 #     return fig
-
 
 
 # def build_fig_four():

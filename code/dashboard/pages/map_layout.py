@@ -131,38 +131,37 @@ MAP_LAYOUT = html.Div(
     Input("animation_dropdown", "value"),
 )
 def modify_map(base_map_style, age_group, year, animate):
-    
-    
+
     if base_map_style is None:
         base_map_style = "stamen-watercolor"
 
     if age_group is None:
         age_group = "25-44"
-    
+
     if animate is None:
         animate = "static"
-        
+
     if year is None:
         year = 2019
-        
+
     elif year > 2019:
         args = [0.12, 0.25, 30, 0.0189, "annual"]
-        animate = 'static_table'
-        time.sleep(.5)
+        animate = "static_table"
+        time.sleep(0.5)
         try:
             table = viz.map_builder(
                 affordability_gen, base_map_style, age_group, year, animate, args
             )
         except:
             return viz.blank()
-        
+
         return table
     args = False
-    
+
     map1 = viz.map_builder(
         income_data_for_map, base_map_style, age_group, year, animate, args
     )
-  
+
     return map1
 
 
@@ -181,14 +180,13 @@ def modify_map2(base_map_style, age_group, year, animate):
         age_group = "25-44"
 
     animate = "static-affordability"
-    
 
     if year is None:
         year = 2021
     # year = 2010
 
     args = [0.12, 0.25, 30, 0.0189, "annual"]
-    
+
     try:
         map2 = viz.map_builder(
             affordability_gen, base_map_style, age_group, year, animate, args
