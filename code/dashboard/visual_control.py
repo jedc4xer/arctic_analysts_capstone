@@ -626,6 +626,21 @@ def build_income_vs_house_price(year_income_hp):
 
 def build_table_for_data(df):
     print("In the table builder")
+    df.columns = ['Year', 'Age','County','House Price','Income','Mortgage','Mort/Inc Ratio', 'Affordable']
+    
+    def clean_column(val, rule):
+        if rule == 'standard':
+            val = "${:,.0f}".format(val)
+        elif rule == 'float':
+            val = val * 100
+            val = "{:.2f}%".format(val)
+        return val
+    
+    df['House Price'] = df['House Price'].apply(lambda x: clean_column(x, 'standard'))
+    df['Income'] = df['Income'].apply(lambda x: clean_column(x, 'standard'))
+    df['Mortgage'] = df['Mortgage'].apply(lambda x: clean_column(x, 'standard'))
+    df['Mort/Inc Ratio'] = df['Mort/Inc Ratio'].apply(lambda x: clean_column(x, 'float'))
+    
     fig = go.Figure(data=[go.Table(
         header=dict(values=list(df.columns),
                     fill_color='paleturquoise',
@@ -716,7 +731,7 @@ def build_affordability_map(df, base_map_style, scale, animate):
 
     for locale in locale_options:
         if locale not in df.FIPS.unique().tolist():
-            new_row = [None, locale, None, locale_options[locale], None, None, None, None, 'Missing']
+            new_row = [None, locale, None, locale_options[locale], 0, 0, 0, 0, 'Missing']
             columns = df.columns.tolist()
             new_row = zip(columns, new_row)
             new_row = {val[0]: val[1] for val in new_row}
@@ -726,11 +741,18 @@ def build_affordability_map(df, base_map_style, scale, animate):
 
     df['Year'] = df['Year'].dropna().tolist()[0]
     df['AgeGroup'] = df['AgeGroup'].dropna().tolist()[0]
-    
+    print(df.columns)
     colors = {"Yes": "#1D9A6C", "No": "#FF1493", "Missing": "#73666D"}
+    
     customdata = np.stack(
-        (df["County"], df["MonthlyMortgage"], df["AgeGroup"]), axis=-1
+        (df["County"], df["MonthlyMortgage"], 
+         df["AgeGroup"], df['MedianHousePrice'], 
+         df['MonthlyIncome'], df['MonthlyMortgage'], 
+         df['mortgage_income_ratio']), axis=-1
     )
+    
+    hover_data = ["County", "MonthlyMortgage", "AgeGroup", 'MedianHousePrice', 
+         'MonthlyIncome', 'MonthlyMortgage', 'mortgage_income_ratio']
     try:
         fig = px.choropleth_mapbox(
             df,
@@ -743,12 +765,12 @@ def build_affordability_map(df, base_map_style, scale, animate):
             color_discrete_map=colors,
             zoom=6.5,
             opacity=1,
-            hover_data=["County", "MonthlyMortgage", "AgeGroup"],
+            hover_data=hover_data,
         )
     except Exception as E:
         print(E)
     fig.update_traces(
-        hovertemplate="<b>County: %{customdata[0]}</b><br>Monthly Mortgage: %{customdata[1]:$,}<br>Age Group: %{customdata[2]}"
+        hovertemplate="<b>%{customdata[0]}</b><br>Monthly Mortgage: %{customdata[1]:$,}<br>Age Group: %{customdata[2]}<br>Median House Price: %{customdata[3]:$,.0f}<br>Monthly Income: %{customdata[4]:$,.0f}<br>Monthly Mortgage: %{customdata[5]:$,.0f}<br>Mort/Inc Ratio: %{customdata[6]:,.2%}"
     )
     return fig
 
