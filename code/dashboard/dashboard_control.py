@@ -4,6 +4,7 @@ from pages.navbar_layout import *
 import dash_bootstrap_components as dbc
 from pages.map_layout import MAP_LAYOUT
 from dash import Input, Output, dcc, html
+from pages.about_us import ABOUT_US_LAYOUT
 from pages.models_layout import MODEL_LAYOUT
 from pages.analysis_layout import ANALYSIS_LAYOUT
 
@@ -53,6 +54,10 @@ def render_page_content(pathname):
     elif pathname == "/page-3":
         print("Picked ML Model Page")
         return MODEL_LAYOUT
+    
+    elif pathname == "/page-4":
+        print("Picked About Us")
+        return ABOUT_US_LAYOUT
 
     # If the user tries to reach a different page, return a 404 message
     return html.Div(

@@ -66,7 +66,6 @@ PAGE_TEXT_CONTENT_5 = """
 A county will be considered affordable if a household making the median income will be able to afford a home that is a median priced home in that county.
 """
 
-
 HOMEPAGE_LAYOUT = html.Div(
     [
         # dbc.Row(html.H1("New Jersey Housing Analysis"), className="text-center"),
