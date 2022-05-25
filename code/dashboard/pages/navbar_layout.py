@@ -12,7 +12,7 @@ NAVIGATION_BAR = dbc.Navbar(
                         dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
                         dbc.Col(
                             dbc.NavbarBrand(
-                                "New Jersey Home Affordability", className="ms-3"
+                                "Home Affordability | New Jersey", className="ms-3"
                             )
                         ),
                     ],

@@ -42,16 +42,16 @@ __current_theme = "QUARTZ"
 THEME = THEMES[__current_theme]
 
 PAGE_TEXT_CONTENT_1 = """
-Owning a home is a long-term goal for many Americans, and the trends of recent years have caused many to question their abilitity for purchase a home as prices have increased rapidly. In this analysis, we looked at affordability specifically in New Jersey at the county level. We will use current house prices, the average mortgage interest rate, and forecasted Median Income to classify counties as affordable or not affordable.
+Owning a home is a long-term goal for many Americans, and the trends of recent years have caused many to question their abilitity to purchase a home as prices have increased rapidly. In this analysis, we looked at affordability specifically in New Jersey at the county level. We will use current house prices, the average mortgage interest rate, and forecasted median income to classify counties as affordable or not affordable.
 """
 
 PAGE_TEXT_CONTENT_2 = "The factors that we considered for this analysis were:"
 
 LIST = """
-* Median Income
-* New Housing Permits
-* Average Mortgage Interest Rate
-* Median House Prices
+* Median Income | 2005 - 2019
+* New Housing Permits | 2000 - 2022
+* Average Mortgage Interest Rate | 2000 - 2022
+* Median House Prices | 2000 - 2022
 """
 
 PAGE_TEXT_CONTENT_4 = """
@@ -92,7 +92,7 @@ HOMEPAGE_LAYOUT = html.Div(
                                             },
                                         ),
                                     ),
-                                    dbc.Col(),
+                                    dbc.Col(width='5'),
                                 ]
                             ),
                             dbc.Row(
@@ -111,13 +111,24 @@ HOMEPAGE_LAYOUT = html.Div(
                         "box-shadow": "1px 7px 5px 7px lightgrey",
                     },
                 ),
+                dbc.Col(width='1'),
                 dbc.Col(
                     html.Div(
-                        dbc.Row(
-                            html.P('This is where some summary Stats can go.')
-                        )
+                        [
+                            dbc.Row(style={'margin-top': "35px"}),
+                            dbc.Row(html.H5('Summary Statistics')),
+                            dbc.Row(html.H6('Number of Counties: 21')),
+                            dbc.Row(html.H6('Income Age Brackets: 5')),
+                            dbc.Row(html.H6('Average House Price')),
+                            dbc.Row(html.P(['2000: $192,086',html.Br(),'2022: $434,143',html.Br(),'Overall: $311,750'])),
+                            dbc.Row(html.H6('Average Income')),
+                            dbc.Row(html.P(['2005: $55,701',html.Br(),'2019: $77,410',html.Br(),'Overall: $63,866'])),
+                            dbc.Row(html.H6('Mortgage Rates')),
+                            dbc.Row(html.P(['Average: 4.98%',html.Br(),'Minimum: 2.68%',html.Br(),'Maximum: 8.52%'])),
+                        ], style={'box-shadow': '2px 2px 5px 5px lightgrey', 'padding': '0px 20px'}
                     ),
-                    width="4"),
+                    width="2"),
+                dbc.Col(width='1')
             ],
             # className="h-25",#
         ),

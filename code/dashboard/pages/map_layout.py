@@ -149,15 +149,20 @@ def modify_map(base_map_style, age_group, year, animate):
         args = [0.12, 0.25, 30, 0.0189, "annual"]
         animate = 'static_table'
         time.sleep(.5)
-        table = viz.map_builder(
-            affordability_gen, base_map_style, age_group, year, animate, args
-        )
+        try:
+            table = viz.map_builder(
+                affordability_gen, base_map_style, age_group, year, animate, args
+            )
+        except:
+            return viz.blank()
+        
         return table
     args = False
     
     map1 = viz.map_builder(
         income_data_for_map, base_map_style, age_group, year, animate, args
     )
+  
     return map1
 
 
@@ -175,15 +180,20 @@ def modify_map2(base_map_style, age_group, year, animate):
     if age_group is None:
         age_group = "25-44"
 
-    if animate is None:
-        animate = "static-affordability"
+    animate = "static-affordability"
+    
 
     if year is None:
         year = 2021
     # year = 2010
 
     args = [0.12, 0.25, 30, 0.0189, "annual"]
-    map2 = viz.map_builder(
-        affordability_gen, base_map_style, age_group, year, animate, args
-    )
+    
+    try:
+        map2 = viz.map_builder(
+            affordability_gen, base_map_style, age_group, year, animate, args
+        )
+    except Exception as E:
+        print(E)
+        return viz.blank()
     return map2

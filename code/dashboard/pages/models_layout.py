@@ -1,4 +1,4 @@
-# import data_control as data_con
+import time
 import arima_model as arima
 import visual_control as viz
 import dash_bootstrap_components as dbc
@@ -144,11 +144,23 @@ def model_builder(n, feature_value, locale_value, age_group, interval):
         new_interval = 5 * 1000
     else:
         new_interval = 5 * 1000
-    differenced, results = adf_gen.send([feature_value, params])
 
-    df = arima_gen.send([feature_value, params])
-    fig1, fig2 = viz.arima_visual_controller(
-        df, feature_value, params, differenced, results
-    )
+    try:
+        differenced, results = adf_gen.send([feature_value, params])
+    except Exception as E:
+        print('Differenced Data Generator Failure', E)
+        
+    try:
+        df = arima_gen.send([feature_value, params])
+    except Exception as E:
+        print('Arima Generator Failure', E)
+        
+    try:
+        fig1, fig2 = viz.arima_visual_controller(
+            df, feature_value, params, differenced, results
+        )
+    except Exception as E:
+        print('Model Visual Creation Failure', E)
+        return viz.blank(), viz.blank()
 
     return fig1, fig2, new_interval
