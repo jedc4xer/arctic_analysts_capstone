@@ -12,8 +12,9 @@ from plotly.subplots import make_subplots
 from config import counties, feature_options, locale_options, age_groups, mode
 
 
-# Visual Formatting Functions
-##################################
+#################################
+# VISUAL FORMATTING
+#################################
 
 
 def map_colors():
@@ -99,12 +100,9 @@ def format_active_axes(fig, min_range=None, max_range=None, units=None):
     return fig
 
 
-# END VISUAL FORMATTING
-####################################################
-
-
-# BLANKS
-#########################################3
+#################################
+# BLANK VISUAL
+#################################
 
 
 def blank():
@@ -113,12 +111,9 @@ def blank():
     return fig
 
 
-# END BLANKS
-############################################
-
-
+#################################
 # ARIMA VISUALIZATIONS
-############################################
+#################################
 
 
 def arima_visual_controller(df, target, params, differenced, results):
@@ -126,7 +121,7 @@ def arima_visual_controller(df, target, params, differenced, results):
     try:
         fig2 = plot_arima_predictions(df, target, params[0])
         fig = build_differencing_chart(differenced, target, results)
-        
+
     except Exception as E:
         print(E)
     return fig, fig2
@@ -135,10 +130,9 @@ def arima_visual_controller(df, target, params, differenced, results):
 def plot_arima_predictions(df, target, locale):
 
     df["Year"] = df.Year.astype("int")
-    # start_year = df.loc[(df.MedianIncome == df.full_results), "Year"]
-    # print(start_year)
-    df.loc[(df.Year < 2019), 'full_results'] = None
-    
+
+    df.loc[(df.Year < 2019), "full_results"] = None
+
     trace1 = go.Scatter(
         x=df["Year"],
         y=df["full_results"],
@@ -146,11 +140,6 @@ def plot_arima_predictions(df, target, locale):
         mode="lines+markers",
         marker_color="black",
     )
-    #     trace1 = px.line(x=df["Year"], y=df["full_results"])
-
-    #     trace1.update_traces(line=dict(color="black", width=3, dash="dash"))
-    #     # trace2.update_traces(line=dict(color="black", width=3))
-    #     trace1.update_traces(name='Accuracy on Training Set')
 
     fig = go.Figure()
     trace2 = go.Scatter(
@@ -177,7 +166,7 @@ def plot_arima_predictions(df, target, locale):
     fig = format_active_layout(fig)
     fig = format_active_axes(fig, units="ForArima")
     age_group = df.AgeGroup.unique().tolist()[0]
-    
+
     fig.update_layout(
         showlegend=True,
         title=dict(
@@ -187,14 +176,7 @@ def plot_arima_predictions(df, target, locale):
     )
     fig.update_layout(
         legend=dict(
-            font_color="black",
-            title="",
-            orientation="h",
-            # yanchor="bottom",
-            # y=1.05,
-            # xanchor="left",
-            # x=0.18,
-            bgcolor=("rgba(0,0,0,0)"),
+            font_color="black", title="", orientation="h", bgcolor=("rgba(0,0,0,0)"),
         ),
     )
 
@@ -206,12 +188,11 @@ def build_differencing_chart(df, target, results):
     df.index = df.index.astype("str")
 
     fig = make_subplots(rows=3, cols=1)
-    
+
     fig.append_trace(
         go.Scatter(x=df["Year"], y=df[target], marker=dict(color="black", size=3)),
         row=1,
         col=1,
-        
     )
 
     fig.append_trace(
@@ -226,115 +207,110 @@ def build_differencing_chart(df, target, results):
         col=1,
     )
 
-    
-    
     fips = df.FIPS.unique().tolist()[0]
     age_group = df.AgeGroup.unique().tolist()[0]
     fig.update_layout(
-        title=dict(text=f"Differenced Data | {locale_options[fips]} | Age Group: {age_group}", font=dict(size=22),),
+        title=dict(
+            text=f"Differenced Data | {locale_options[fips]} | Age Group: {age_group}",
+            font=dict(size=22),
+        ),
         margin={"r": 10, "t": 50, "l": 5, "b": 25},
         showlegend=False,
     )
     results_dict = results[0]
-    adf_text = 'Not Differenced'
-    adf = round(results_dict['ADF Statistic'],3)
-    pval = round(results_dict['P-Value'],9)
-    display_string = f'{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}'
-    
-    if pval < .05:
-        font_col = 'green'
-        display_string = '<b>' + display_string + '<b>'
+    adf_text = "Not Differenced"
+    adf = round(results_dict["ADF Statistic"], 3)
+    pval = round(results_dict["P-Value"], 9)
+    display_string = f"{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}"
+
+    if pval < 0.05:
+        font_col = "green"
+        display_string = "<b>" + display_string + "<b>"
     else:
-        font_col = 'black'
-        
+        font_col = "black"
+
     data_mean = df[target].mean()
     data_max = df[target].max()
     fig.add_annotation(
         dict(
-            # x=1, y=1, # annotation point
-            #x=df['Year'].mean(),
-            y=data_mean + (data_max-data_mean),
-            xref='x1', 
-            yref='y1',
+            y=data_mean + (data_max - data_mean),
+            xref="x1",
+            yref="y1",
             text=display_string,
             showarrow=False,
             ax=0,
             ay=-40,
-            font = {'color': font_col}
+            font={"color": font_col},
         ),
     )
-    
+
     results_dict = results[1]
-    adf_text = 'Differenced Once'
-    adf = round(results_dict['ADF Statistic'],3)
-    pval = round(results_dict['P-Value'],9)
-    display_string = f'{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}'
-    
-    if pval < .05:
-        font_col = 'green'
-        display_string = '<b>' + display_string + '<b>'
+    adf_text = "Differenced Once"
+    adf = round(results_dict["ADF Statistic"], 3)
+    pval = round(results_dict["P-Value"], 9)
+    display_string = f"{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}"
+
+    if pval < 0.05:
+        font_col = "green"
+        display_string = "<b>" + display_string + "<b>"
     else:
-        font_col = 'black'
-        
-    data_mean = df['diff_1'].mean()
-    data_max = df['diff_1'].max()
-    
+        font_col = "black"
+
+    data_mean = df["diff_1"].mean()
+    data_max = df["diff_1"].max()
+
     fig.add_annotation(
         dict(
-            # x=1, y=1, # annotation point
-            y=data_mean + (data_max-data_mean),
-            xref='x1', 
-            yref='y2',
+            y=data_mean + (data_max - data_mean),
+            xref="x1",
+            yref="y2",
             text=display_string,
             showarrow=False,
             ax=0,
             ay=-40,
-            font = {'color': font_col}
+            font={"color": font_col},
         ),
     )
-    
+
     results_dict = results[2]
-    adf_text = 'Differenced Twice'
-    adf = round(results_dict['ADF Statistic'],3)
-    pval = round(results_dict['P-Value'],9)
-    display_string = f'{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}'
-    
-    if pval < .05:
-        font_col = 'green'
-        display_string = '<b>' + display_string + '<b>'
+    adf_text = "Differenced Twice"
+    adf = round(results_dict["ADF Statistic"], 3)
+    pval = round(results_dict["P-Value"], 9)
+    display_string = f"{adf_text}<br>ADF Stat: {adf}<br>P-Value: {pval}"
+
+    if pval < 0.05:
+        font_col = "green"
+        display_string = "<b>" + display_string + "<b>"
     else:
-        font_col = 'black'
-        
-    data_mean = df['diff_2'].mean()
-    data_max = df['diff_2'].max()
-    
+        font_col = "black"
+
+    data_mean = df["diff_2"].mean()
+    data_max = df["diff_2"].max()
+
     fig.add_annotation(
         dict(
             # x=1, y=1, # annotation point
-            y=data_mean + (data_max-data_mean),
-            xref='x1', 
-            yref='y3',
+            y=data_mean + (data_max - data_mean),
+            xref="x1",
+            yref="y3",
             text=display_string,
             showarrow=False,
             ax=0,
             ay=-40,
-            font = {'color': font_col}
+            font={"color": font_col},
         ),
     )
     fig = format_active_layout(fig)
 
     fig = format_active_axes(fig, min_range=None, max_range=None, units="SomeYears")
     fig.update_layout()
-    
+
     return fig
 
 
-# END ARIMA VISUALS
-####################################################
-
-
+#################################
 # ANALYSIS PAGE VISUAL CONTROLLERS
-#####################################################
+#################################
 
 
 def income_visual_master(yearly_income, target_fips):
@@ -343,7 +319,6 @@ def income_visual_master(yearly_income, target_fips):
         full, df = next(yearly_income)
     except Exception as E:
         print(E)
-    # new_data_con.highest_median_income()
 
     min_range = 0
     max_range = full[(full.FIPS == target_fips)]["MedianIncome"].max()
@@ -378,12 +353,9 @@ def home_price_visual_master(home_prices, target_fips):
     return fig3
 
 
-# END ANALYSIS PAGE VISUAL CONTROLLERS
-#####################################################
-
-
+#################################
 # ANALYSIS PAGE VISUAL BUILDERS
-#####################################################
+#################################
 
 
 def income_by_age_group(df, args):
@@ -447,14 +419,7 @@ def income_by_age_group(df, args):
             text=f"<b>Median Income by Age Group | {locale}<b>", font=dict(size=20)
         ),
         legend=dict(
-            font_color="black",
-            title="",
-            orientation="h",
-            # yanchor="top",
-            # y=1.13,
-            # xanchor="left",
-            # x=0.18,
-            bgcolor=("rgba(0,0,0,0)"),
+            font_color="black", title="", orientation="h", bgcolor=("rgba(0,0,0,0)"),
         ),
     )
     # Send out for final formatting
@@ -475,7 +440,7 @@ def build_average_median_income(df):
     )
 
     # Create Figure
-    fig = px.bar(df, x="MedianIncome", y="County", text="displayed_text", opacity = .7)
+    fig = px.bar(df, x="MedianIncome", y="County", text="displayed_text", opacity=0.7)
 
     # Send out for formatting.
     fig = format_active_layout(fig)
@@ -503,12 +468,6 @@ def build_average_median_income(df):
     return fig
 
     fig.update_traces(line=dict(width=2))
-    # fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
-    # fig.update_traces(
-    #         mode="markers",
-    #         marker_line_width=2,
-    #         marker_size=10,
-    #     )
 
     min_range, max_range, locale = args
     fig.update_layout(
@@ -519,15 +478,7 @@ def build_average_median_income(df):
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="white",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
-        legend=dict(
-            title="",
-            orientation="h",
-            # yanchor="top",
-            # y=1.10,
-            # xanchor="left",
-            # x=0.18,
-            bgcolor=("rgba(0,0,0,0)"),
-        ),
+        legend=dict(title="", orientation="h", bgcolor=("rgba(0,0,0,0)"),),
     )
     fig = format_active_layout(fig)
     fig = format_active_axes(fig, min_range, max_range, "Year")
@@ -559,7 +510,6 @@ def build_average_house_prices(df, args):
             line=dict(width=2, color="rgb(0, 0, 0)"),
         )
     )
-    # fig = px.bar(df, x="Date", y="MedianHousePrice", color="FIPS")
 
     min_range, max_range, locale = args
 
@@ -673,12 +623,9 @@ def build_income_vs_house_price(year_income_hp):
     return fig
 
 
-# END ANALYSIS PAGE VISUAL BUILDERS
-####################################################
-
-
-# Map Visualizations
-###################################
+#################################
+# MAP VISUALIZATIONS MENU FORMATTING
+#################################
 
 
 def format_map_menu(fig):
@@ -744,10 +691,10 @@ def build_animated_map(df, base_map_style, scale, animate):
         center={"lat": 40.15, "lon": -74.421983},
         mapbox_style=base_map_style,
         zoom=6.5,
-        opacity=0.8,
+        opacity=0.9,
         animation_frame=animate,
         range_color=scale,
-        color_continuous_scale="jet",
+        color_continuous_scale="Bugn",
         hover_data=["County", "MedianIncome", "AgeGroup"],
     )
     fig.update_traces(
@@ -757,26 +704,26 @@ def build_animated_map(df, base_map_style, scale, animate):
 
 
 def build_affordability_map(df, base_map_style, scale, animate):
-    
+    colors = {"Yes": "#1D9A6C", "No": "#FF1493", "Missing": "#FF1493"}
     customdata = np.stack(
         (df["County"], df["MonthlyMortgage"], df["AgeGroup"]), axis=-1
     )
-
-    fig = px.choropleth_mapbox(
-        df,
-        geojson=counties,
-        color="affordable",
-        locations="FIPS",
-        featureidkey="properties.FIPSSTCO",
-        center={"lat": 40.15, "lon": -74.421983},
-        mapbox_style=base_map_style,
-        zoom=6.5,
-        opacity=1,
-        # animation_frame=animate,
-        # range_color=scale,
-        # color_continuous_scale="jet",
-        hover_data=["County", "MonthlyMortgage", "AgeGroup"],
-    )
+    try:
+        fig = px.choropleth_mapbox(
+            df,
+            geojson=counties,
+            color="affordable",
+            locations="FIPS",
+            featureidkey="properties.FIPSSTCO",
+            center={"lat": 40.15, "lon": -74.421983},
+            mapbox_style=base_map_style,
+            color_discrete_map=colors,
+            zoom=6.5,
+            opacity=1,
+            hover_data=["County", "MonthlyMortgage", "AgeGroup"],
+        )
+    except Exception as E:
+        print(E)
     fig.update_traces(
         hovertemplate="<b>County: %{customdata[0]}</b><br>Monthly Mortgage: %{customdata[1]:$,}<br>Age Group: %{customdata[2]}"
     )
@@ -793,7 +740,7 @@ def map_builder(
     target="MedianIncome",
 ):
     map_mode = animate
-    
+
     if not args:
         df = next(generator)
         df = df[(df[target] > 0)]
@@ -801,8 +748,7 @@ def map_builder(
 
     else:
         df = generator.send(args)
-    
-    
+
     if animate == "animated":
         print("Building Animated Map")
         map_title = f"Median Income (Animated) | {age_group}"
@@ -839,11 +785,11 @@ def map_builder(
         font_color="black",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
     )
-    if map_mode != 'static-affordability':
+    if map_mode != "static-affordability":
         fig.update_layout(
             title_y=0.96,
             title_x=0.05,
-            #legend=dict(x=0.9, y=0.4),
+            # legend=dict(x=0.9, y=0.4),
             coloraxis_colorbar=dict(
                 title=f"{feature_options[target]}",
                 titlefont=dict(color="white", size=15),
@@ -853,126 +799,113 @@ def map_builder(
                 tickcolor="white",
                 tickfont=dict(color="white", size=14),
                 tickprefix="$",
-                len=0.85
-                #             thicknessmode="pixels", thickness=25,
-                #             lenmode="fraction", len=.5,
-                #             yanchor="top", y=.75,
-                #             ticks="outside", ticksuffix=" bills",
-                #             #dtick=100000
+                len=0.85,
             ),
         )
-        
-    if map_mode == 'static-affordability':
+
+    if map_mode == "static-affordability":
         fig.update_layout(
             title_y=0.96,
             title_x=0.05,
             legend=dict(
-                bordercolor='black',
+                bordercolor="black",
                 borderwidth=2,
-                bgcolor='rgba(255,255,255,.7)',
-                x=0.97, 
+                bgcolor="rgba(255,255,255,.7)",
+                x=0.97,
                 y=0.4,
-                font=dict(color='black', size=16),
-                xanchor='right',
-                title = dict(
-                    text= 'Is the County Affordable?')
+                font=dict(color="black", size=16),
+                xanchor="right",
+                title=dict(text="Is the County Affordable?"),
             ),
-            
         )
 
     return fig
 
 
-# END MAP VISUALS
-####################################################
-
-# Build Polynomial Visualizations
-####################################
+#################################
+# POLYNOMIAL VISUALS - DEPRECATED
+#################################
 
 
-def build_polynomial_model(model_data, target, locale, best):
-    """ This function creates a visualization for a polynomial regression model. """
+# def build_polynomial_model(model_data, target, locale, best):
+#     """ This function creates a visualization for a polynomial regression model. """
 
-    # This data was returned from a generator yield on the MODEL_LAYOUT page.
-    # It is yielded from the poly_generator in the data_control.py file
-    # It is received in a list and unpacked in the code below.
-    try:
-        i, predictions, original, futures = model_data
-    except Exception as E:
-        print("Error in build_polynomial_model", E)
+#     # This data was returned from a generator yield on the MODEL_LAYOUT page.
+#     # It is yielded from the poly_generator in the data_control.py file
+#     # It is received in a list and unpacked in the code below.
+#     try:
+#         i, predictions, original, futures = model_data
+#     except Exception as E:
+#         print("Error in build_polynomial_model", E)
 
-    # Get the dates for the predictions
-    freq = "M" if target != "MedianIncome" else "Y"
-    num_periods = futures.shape[0]
-    fixed_dates = data_con.get_date_range(
-        original["date"].dropna().tolist()[-1], num_periods, freq
-    )
+#     # Get the dates for the predictions
+#     freq = "M" if target != "MedianIncome" else "Y"
+#     num_periods = futures.shape[0]
+#     fixed_dates = data_con.get_date_range(
+#         original["date"].dropna().tolist()[-1], num_periods, freq
+#     )
 
-    # Add the prediction dates to the prediction df
-    futures["date"] = fixed_dates
+#     # Add the prediction dates to the prediction df
+#     futures["date"] = fixed_dates
 
-    # combine all the dataframes
-    data_for_plotting = pd.merge(
-        original, predictions, left_on="predictor", right_on="x_var", how="outer"
-    )
-    data_for_plotting = pd.merge(
-        data_for_plotting,
-        futures,
-        left_on=["predictor", "date"],
-        right_on=["predictor", "date"],
-        how="outer",
-    )
-    data_for_plotting["date"] = pd.to_datetime(data_for_plotting["date"])
+#     # combine all the dataframes
+#     data_for_plotting = pd.merge(
+#         original, predictions, left_on="predictor", right_on="x_var", how="outer"
+#     )
+#     data_for_plotting = pd.merge(
+#         data_for_plotting,
+#         futures,
+#         left_on=["predictor", "date"],
+#         right_on=["predictor", "date"],
+#         how="outer",
+#     )
+#     data_for_plotting["date"] = pd.to_datetime(data_for_plotting["date"])
 
-    # Create the first trace
-    if target == "MedianIncome":
-        fig1 = px.scatter(x=data_for_plotting["date"], y=data_for_plotting[target])
-        fig1.update_traces(
-            mode="markers",
-            marker_line_width=2,
-            marker_size=15,
-            marker_color="rgba(0,0,255,.3)",
-        )
+#     # Create the first trace
+#     if target == "MedianIncome":
+#         fig1 = px.scatter(x=data_for_plotting["date"], y=data_for_plotting[target])
+#         fig1.update_traces(
+#             mode="markers",
+#             marker_line_width=2,
+#             marker_size=15,
+#             marker_color="rgba(0,0,255,.3)",
+#         )
 
-    else:
-        fig1 = px.line(x=data_for_plotting["date"], y=data_for_plotting[target])
-        fig1.update_traces(line=dict(color="black", width=3))
+#     else:
+#         fig1 = px.line(x=data_for_plotting["date"], y=data_for_plotting[target])
+#         fig1.update_traces(line=dict(color="black", width=3))
 
-    # Create the second trace
-    fig2 = px.line(x=data_for_plotting["date"], y=data_for_plotting["predictions"])
+#     # Create the second trace
+#     fig2 = px.line(x=data_for_plotting["date"], y=data_for_plotting["predictions"])
 
-    fig3 = px.line(x=data_for_plotting["date"], y=data_for_plotting["futures"])
+#     fig3 = px.line(x=data_for_plotting["date"], y=data_for_plotting["futures"])
 
-    fig2.update_traces(line=dict(color="white", width=3, dash="dash"))
-    fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
+#     fig2.update_traces(line=dict(color="white", width=3, dash="dash"))
+#     fig3.update_traces(line=dict(color="red", width=3, dash="dash"))
 
-    # Combine the traces into a single figure
-    final_fig = go.Figure(data=fig1.data + fig2.data + fig3.data)
+#     # Combine the traces into a single figure
+#     final_fig = go.Figure(data=fig1.data + fig2.data + fig3.data)
 
-    if best:
-        indicate_best = "| Lowest RMSE | (Animation Paused)"
-    else:
-        indicate_best = ""
+#     if best:
+#         indicate_best = "| Lowest RMSE | (Animation Paused)"
+#     else:
+#         indicate_best = ""
 
-    title_string = f"""
-    <b>{feature_options[target]} | Degrees: {i}<br>
-    {locale_options[locale]} {indicate_best}<b>
-    """
-    # Add and format the title
-    final_fig.update_layout(title=dict(text=title_string, font=dict(size=20),))
+#     title_string = f"""
+#     <b>{feature_options[target]} | Degrees: {i}<br>
+#     {locale_options[locale]} {indicate_best}<b>
+#     """
+#     # Add and format the title
+#     final_fig.update_layout(title=dict(text=title_string, font=dict(size=20),))
 
-    min_range = original[target].min()
-    max_range = original[target].max()
+#     min_range = original[target].min()
+#     max_range = original[target].max()
 
-    # Send the figure out for formatting.
-    final_fig = format_active_layout(final_fig)
+#     # Send the figure out for formatting.
+#     final_fig = format_active_layout(final_fig)
 
-    final_fig = format_active_axes(final_fig, min_range, max_range)
-    return final_fig
-
-
-# END POLYNOMIAL VISUALS
-####################################################
+#     final_fig = format_active_axes(final_fig, min_range, max_range)
+#     return final_fig
 
 
 # Possible Trash
