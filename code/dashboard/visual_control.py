@@ -627,6 +627,18 @@ def build_income_vs_house_price(year_income_hp):
 # MAP VISUALIZATIONS MENU FORMATTING
 #################################
 
+def build_table_for_data(df):
+    print("In the table builder")
+    fig = go.Figure(data=[go.Table(
+        header=dict(values=list(df.columns),
+                    fill_color='paleturquoise',
+                    align='left'),
+        cells=dict(values=[df[_] for _ in df.columns],
+                   fill_color='lavender',
+                   align='left'))
+    ])
+    return fig
+
 
 def format_map_menu(fig):
     # First removing the current buttons
@@ -704,7 +716,21 @@ def build_animated_map(df, base_map_style, scale, animate):
 
 
 def build_affordability_map(df, base_map_style, scale, animate):
-    colors = {"Yes": "#1D9A6C", "No": "#FF1493", "Missing": "#FF1493"}
+
+    for locale in locale_options:
+        if locale not in df.FIPS.unique().tolist():
+            new_row = [None, locale, None, locale_options[locale], None, None, None, None, 'Missing']
+            columns = df.columns.tolist()
+            new_row = zip(columns, new_row)
+            new_row = {val[0]: val[1] for val in new_row}
+            temp_df = pd.DataFrame(new_row, index = [1])
+
+            df = pd.concat([df, temp_df])
+
+    df['Year'] = df['Year'].dropna().tolist()[0]
+    df['AgeGroup'] = df['AgeGroup'].dropna().tolist()[0]
+    
+    colors = {"Yes": "#1D9A6C", "No": "#FF1493", "Missing": "#73666D"}
     customdata = np.stack(
         (df["County"], df["MonthlyMortgage"], df["AgeGroup"]), axis=-1
     )
@@ -740,7 +766,7 @@ def map_builder(
     target="MedianIncome",
 ):
     map_mode = animate
-
+    
     if not args:
         df = next(generator)
         df = df[(df[target] > 0)]
@@ -756,7 +782,6 @@ def map_builder(
         scale = [df[target].min(), df[target].max()]
         df.drop_duplicates(inplace=True)
         df = df.sort_values(by="Year")
-
         fig = build_animated_map(df, base_map_style, scale, "Year")
         fig = format_map_menu(fig)
 
@@ -767,14 +792,22 @@ def map_builder(
         scale = [df[target].min(), df[target].max()]
         df = df.drop_duplicates()
         fig = build_animated_map(df, base_map_style, scale, None)
-    elif animate == "static-affordability":
+
+        
+    elif (animate == "static-affordability" or animate == 'static_table'):
         print("Building Static Affordability Map")
         map_title = f"Home Affordability | {age_group} | {target_year}"
         df = df[(df.AgeGroup == age_group) & (df.Year == target_year)]
         scale = None
         animate = "static"
         df.drop_duplicates(inplace=True)
-        fig = build_affordability_map(df, base_map_style, scale, animate)
+        if (target_year > 2019 and map_mode == 'static_table'):
+            df.replace([np.inf, -np.inf], np.nan, inplace = True)
+            df.dropna(inplace = True)
+            df = df.drop(columns = ['FIPS'])
+            fig = build_table_for_data(df)
+        else:
+            fig = build_affordability_map(df, base_map_style, scale, animate)
 
     fig.update_layout(
         coloraxis_showscale=True,
@@ -785,7 +818,7 @@ def map_builder(
         font_color="black",
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
     )
-    if map_mode != "static-affordability":
+    if map_mode not in ["static-affordability", 'static_table']:
         fig.update_layout(
             title_y=0.96,
             title_x=0.05,
@@ -803,7 +836,7 @@ def map_builder(
             ),
         )
 
-    if map_mode == "static-affordability":
+    if map_mode in ["static-affordability", 'static_table']:
         fig.update_layout(
             title_y=0.96,
             title_x=0.05,
@@ -817,6 +850,10 @@ def map_builder(
                 xanchor="right",
                 title=dict(text="Is the County Affordable?"),
             ),
+        )
+    if map_mode == 'static_table':
+        fig.update_layout(
+            title = ''
         )
 
     return fig

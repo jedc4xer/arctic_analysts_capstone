@@ -42,7 +42,7 @@ __current_theme = "QUARTZ"
 THEME = THEMES[__current_theme]
 
 PAGE_TEXT_CONTENT_1 = """
-Owning a home is a long-term goal for many Americans, and the trends of recent years have caused many to question their abilitity for purchase a home as prices have increased rapidly. In this analysis, we looked at affordability specifically in New Jersey by at the county level. We will use current house prices, the average mortgage interest rate, and forecasted Median Income to classify counties as affordable or not affordable.
+Owning a home is a long-term goal for many Americans, and the trends of recent years have caused many to question their abilitity for purchase a home as prices have increased rapidly. In this analysis, we looked at affordability specifically in New Jersey at the county level. We will use current house prices, the average mortgage interest rate, and forecasted Median Income to classify counties as affordable or not affordable.
 """
 
 PAGE_TEXT_CONTENT_2 = "The factors that we considered for this analysis were:"
@@ -59,7 +59,7 @@ We were able to get current data for all of our variables except for Median Inco
 """
 
 PAGE_TEXT_CONTENT_4A = """
-We are defining home affordability as when the monthly mortgage payment including the average property tax is less than or equal to 25% of a household's monthly median income given a 20% down-payment.
+We are defining home affordability as when the monthly mortgage payment including the average property tax is less than or equal to 25% of a household's monthly median income given a 12% down-payment.
 """
 
 PAGE_TEXT_CONTENT_5 = """
