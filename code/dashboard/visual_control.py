@@ -160,7 +160,10 @@ def arima_visual_controller(df, target, params, differenced, results):
 
 def plot_arima_predictions(df, target, locale):
 
-    df["Year"] = df.Year.astype("int")
+    try:
+        df["Year"] = df.Year.astype("int")
+    except:
+        return blank()
 
     df.loc[(df.Year < 2019), "full_results"] = None
 
@@ -625,7 +628,6 @@ def build_income_vs_house_price(year_income_hp):
 #################################
 
 def build_table_for_data(df):
-    print("In the table builder")
     df.columns = ['Year', 'Age','County','House Price','Income','Mortgage','Mort/Inc Ratio', 'Affordable']
     
     def clean_column(val, rule):
@@ -741,18 +743,17 @@ def build_affordability_map(df, base_map_style, scale, animate):
 
     df['Year'] = df['Year'].dropna().tolist()[0]
     df['AgeGroup'] = df['AgeGroup'].dropna().tolist()[0]
-    print(df.columns)
+
     colors = {"Yes": "#1D9A6C", "No": "#FF1493", "Missing": "#73666D"}
     
     customdata = np.stack(
         (df["County"], df["MonthlyMortgage"], 
          df["AgeGroup"], df['MedianHousePrice'], 
-         df['MonthlyIncome'], df['MonthlyMortgage'], 
-         df['mortgage_income_ratio']), axis=-1
+         df['MonthlyIncome'], df['mortgage_income_ratio']), axis=-1
     )
     
     hover_data = ["County", "MonthlyMortgage", "AgeGroup", 'MedianHousePrice', 
-         'MonthlyIncome', 'MonthlyMortgage', 'mortgage_income_ratio']
+         'MonthlyIncome', 'mortgage_income_ratio']
     try:
         fig = px.choropleth_mapbox(
             df,
@@ -769,8 +770,18 @@ def build_affordability_map(df, base_map_style, scale, animate):
         )
     except Exception as E:
         print(E)
+    
+    ht1 = '<b>%{customdata[0]}</b>'
+    ht2 = 'Monthly Mortgage: %{customdata[1]:$,.0f}'
+    ht3 = 'Age Group: %{customdata[2]}'
+    ht4 = 'Median House Price: %{customdata[3]:$,.0f}'
+    ht5 = 'Monthly Income: %{customdata[4]:$,.0f}'
+    ht6 = 'Mort/Inc Ratio: %{customdata[5]:,.2%}'
+    spacer1='<br>'
+    spacer2='<br><br>'
+   
     fig.update_traces(
-        hovertemplate="<b>%{customdata[0]}</b><br>Monthly Mortgage: %{customdata[1]:$,}<br>Age Group: %{customdata[2]}<br>Median House Price: %{customdata[3]:$,.0f}<br>Monthly Income: %{customdata[4]:$,.0f}<br>Monthly Mortgage: %{customdata[5]:$,.0f}<br>Mort/Inc Ratio: %{customdata[6]:,.2%}"
+        hovertemplate= ht1 + spacer1 + ht3 + spacer2 + ht4 + spacer1 + ht2 + spacer1 + ht5 + spacer1 + ht6
     )
     return fig
 
@@ -795,7 +806,6 @@ def map_builder(
         df = generator.send(args)
 
     if animate == "animated":
-        print("Building Animated Map")
         map_title = f"Median Income (Animated) | {age_group}"
         df = df[(df.AgeGroup == age_group)]
         scale = [df[target].min(), df[target].max()]
@@ -805,7 +815,6 @@ def map_builder(
         fig = format_map_menu(fig)
 
     elif animate == "static":
-        print("Building Static Map")
         map_title = f"Median Income | {age_group} | {target_year}"
         df = df[(df.Year == target_year) & (df.AgeGroup == age_group)]
         scale = [df[target].min(), df[target].max()]
@@ -814,7 +823,6 @@ def map_builder(
 
         
     elif (animate == "static-affordability" or animate == 'static_table'):
-        print("Building Static Affordability Map")
         map_title = f"Home Affordability | {age_group} | {target_year}"
         df = df[(df.AgeGroup == age_group) & (df.Year == target_year)]
         scale = None
