@@ -393,10 +393,6 @@ def calculate_affordability(master_df):
         # For understanding the data at this point
         # final_table[(final_table.affordable == 'No')].to_html('predicted_test_table.html', index = False)
         # final_table.to_csv('predicted_test.csv',index = False)
-        print("\n")
-        print(final_table.drop_duplicates().shape)
-        print(final_table.shape)
-        print("\n")
 
         # Data Return Logic
         if time_frame == "monthly":
