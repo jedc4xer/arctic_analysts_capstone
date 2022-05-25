@@ -806,13 +806,14 @@ def map_builder(
         else:
             fig = build_affordability_map(df, base_map_style, scale, animate)
 
+    font_color='white' if base_map_style == 'carto-darkmatter' else 'black'
     fig.update_layout(
         coloraxis_showscale=True,
         title=dict(text=f"<b>{map_title}<b>", font=dict(size=28)),
         margin={"r": 0, "t": 0, "l": 0, "b": 0, "autoexpand": True},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font_color="black",
+        font_color=font_color,
         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
     )
     if map_mode not in ["static-affordability", 'static_table']:
