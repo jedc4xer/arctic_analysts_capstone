@@ -851,7 +851,7 @@ def map_builder(
     if map_mode == 'static_table':
         fig.update_layout(
             title = '',
-            title_text="To view the map again, set the year to less than 2020.",
+            title_text="To view the median income map again, set the year to less than 2020.",
             margin={"r": 0, "t": 45, "l": 0, "b": 0, "autoexpand": True},
         )
 
