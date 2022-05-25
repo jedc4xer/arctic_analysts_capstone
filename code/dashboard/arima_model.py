@@ -134,6 +134,7 @@ def get_adf(df, target):
         cols_to_check = [target, "diff_12"]
     results = []
     best_adf = 1000000000
+    best_col = 'diff_2'
     for i, col in enumerate(cols_to_check):
         adf_result = adfuller(df[col].dropna())
         result = {"Seq": i, "ADF Statistic": adf_result[0], "P-Value": adf_result[1]}
@@ -146,8 +147,8 @@ def get_adf(df, target):
                 best_adf = adf_result[1]
                 num_diffs = i
 
-    if best_col == "diff_12":
-        num_diffs = 12
+    # if best_col == "diff_12":
+    #     num_diffs = 12
     return df, best_col, num_diffs, results
 
 

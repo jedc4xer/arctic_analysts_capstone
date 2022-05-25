@@ -97,6 +97,15 @@ def format_active_axes(fig, min_range=None, max_range=None, units=None):
         fig.update_yaxes(
             range=[min_range - (min_range * 0.1), max_range + (max_range * 0.1)],
         )
+    elif units == 'ForArima':
+
+        try:
+            fig.update_yaxes(
+                range=[0,max_range + (max_range * .20)]
+            )
+        except Exception as E:
+            print(E)
+            
     return fig
 
 
@@ -108,6 +117,22 @@ def format_active_axes(fig, min_range=None, max_range=None, units=None):
 def blank():
     fig = px.scatter()
     fig = format_active_axes(fig)
+    fig = format_active_layout(fig)
+    text1 = 'Hmmm, this is unfortunate.<br><br> We wanted to show you something,<br>'
+    text2 = 'but we are having trouble finding it right now!<br><br>'
+    text3 = 'Please be patient while we search the house.'
+    
+    fig.add_annotation(
+        dict(
+            # xref="x1",
+            # yref="y1",
+            text=text1 + text2 + text3,
+            showarrow=False,
+            # ax=0,
+            # ay=-40,
+            font={"color": 'black', 'size': 15},
+        ),
+    )
     return fig
 
 
@@ -119,11 +144,17 @@ def blank():
 def arima_visual_controller(df, target, params, differenced, results):
 
     try:
-        fig2 = plot_arima_predictions(df, target, params[0])
         fig = build_differencing_chart(differenced, target, results)
-
     except Exception as E:
-        print(E)
+        print('Differencing Error: ', E)
+        fig = blank()
+    
+    try:
+        fig2 = plot_arima_predictions(df, target, params[0])
+    except Exception as E:
+        print('Prediction Error: ', E)
+        fig2 = blank()
+
     return fig, fig2
 
 
@@ -163,8 +194,13 @@ def plot_arima_predictions(df, target, locale):
         annotation_text="Predicted Period",
         annotation_position="left",
     )
+    if df['MedianIncome'].max() >= df['full_results'].max():
+        max_range = df['MedianIncome'].max()
+    else:
+        max_range = df['full_results'].max()
+        
     fig = format_active_layout(fig)
-    fig = format_active_axes(fig, units="ForArima")
+    fig = format_active_axes(fig, max_range = max_range, units="ForArima")
     age_group = df.AgeGroup.unique().tolist()[0]
 
     fig.update_layout(
@@ -545,45 +581,6 @@ def build_average_house_prices(df, args):
     return fig
 
 
-def build_fig_four():
-
-    print("\nBuilding Median Income by Age Group chart.")
-    df = data_con.income_data()
-
-    fig = px.bar(
-        x=df["Year"], y=df["MedianIncome"], color=df["AgeGroup"], barmode="group"
-    )
-    fig.update_layout(
-        title=dict(text="<b>Median Income by Age Group<b>", font=dict(size=20)),
-        paper_bgcolor="rgba(0,0,0,.2)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,0)"},
-    )
-    fig.update_xaxes(ticks="outside", tickwidth=1, ticklen=7, tickcolor="rgba(0,0,0,0)")
-    fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
-    print("Finished Building Median Income by Age Group Chart\n")
-    return fig
-
-
-def build_income_line_chart(income_df):
-    """ This function builds a filled area chart (which can be easily turned into a line chart)"""
-
-    fig = px.line(income_df, x="Year", y="MedianIncome", color="FIPS")
-
-    fig.update_layout(
-        title=dict(text="<b>Chart 4<b>", font=dict(size=20)),
-        paper_bgcolor="rgba(255,255,255,1)",
-        plot_bgcolor="rgba(255,255,255,1)",
-        font_color="white",
-        modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
-    )
-    fig.update_xaxes(ticks="outside", tickwidth=1, ticklen=7, tickcolor="rgba(0,0,0,0)")
-    fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
-
-    return fig
-
-
 def build_income_vs_house_price(year_income_hp):
     # I think that if we do a baseline year in 2005, and then show a chart indicating how much each has moved
     # from that baseline, it could be a powerful visual.
@@ -853,7 +850,9 @@ def map_builder(
         )
     if map_mode == 'static_table':
         fig.update_layout(
-            title = ''
+            title = '',
+            title_text="To view the map again, set the year to less than 2020.",
+            margin={"r": 0, "t": 45, "l": 0, "b": 0, "autoexpand": True},
         )
 
     return fig
@@ -947,6 +946,46 @@ def map_builder(
 
 # Possible Trash
 ##########################################33
+
+# def build_income_line_chart(income_df):
+#     """ This function builds a filled area chart (which can be easily turned into a line chart)"""
+
+#     fig = px.line(income_df, x="Year", y="MedianIncome", color="FIPS")
+
+#     fig.update_layout(
+#         title=dict(text="<b>Chart 4<b>", font=dict(size=20)),
+#         paper_bgcolor="rgba(255,255,255,1)",
+#         plot_bgcolor="rgba(255,255,255,1)",
+#         font_color="white",
+#         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,1)"},
+#     )
+#     fig.update_xaxes(ticks="outside", tickwidth=1, ticklen=7, tickcolor="rgba(0,0,0,0)")
+#     fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
+
+#     return fig
+
+
+
+# def build_fig_four():
+
+#     print("\nBuilding Median Income by Age Group chart.")
+#     df = data_con.income_data()
+
+#     fig = px.bar(
+#         x=df["Year"], y=df["MedianIncome"], color=df["AgeGroup"], barmode="group"
+#     )
+#     fig.update_layout(
+#         title=dict(text="<b>Median Income by Age Group<b>", font=dict(size=20)),
+#         paper_bgcolor="rgba(0,0,0,.2)",
+#         plot_bgcolor="rgba(0,0,0,0)",
+#         font_color="white",
+#         modebar={"bgcolor": "rgba(0,0,0,0)", "color": "rgba(0,0,0,0)"},
+#     )
+#     fig.update_xaxes(ticks="outside", tickwidth=1, ticklen=7, tickcolor="rgba(0,0,0,0)")
+#     fig.update_yaxes(ticks="outside", tickwidth=1, ticklen=6, tickcolor="rgba(0,0,0,0)")
+#     print("Finished Building Median Income by Age Group Chart\n")
+#     return fig
+
 
 # def build_fig_two(df, args):
 #     start = time.perf_counter()
