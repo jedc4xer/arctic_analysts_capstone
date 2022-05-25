@@ -37,15 +37,18 @@ python dashboard_control.py
         
 Repository Layout:
 
-    - Directories
-        - Project Specifications/
-            - NapkinDrawings/
-                - Napkin Drawings
-            - Project Specification Files
-        - code/
-            - Azure_SQL/
-                - Database Creation Code
-            - dashboard/
-                - code files
-            - ml_models/
-                - Jupyter Notebooks with model testing
+    - Project Specifications/
+        - NapkinDrawings/
+            - Napkin Drawings
+        - Project Specification Files
+    - code/
+        - Azure_SQL/
+            - Database Creation Code
+        - dashboard/
+            - Dashboard Code files and folders
+        - ml_models/
+            - Jupyter Notebooks for model creation
+            - .py model and data handling files
+            - Exploratory notebooks and files
+        - databricks/
+            - Azure Databricks used in data factory
