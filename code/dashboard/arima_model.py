@@ -1,18 +1,18 @@
 import pandas as pd
 import datetime as dt
 from math import sqrt
+from warnings import filterwarnings
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
-from warnings import filterwarnings
 
 filterwarnings("ignore")
 
-
+#################################
 # HELPER FUNCTIONS
-########################################
+#################################
 
 
 def get_date_range(start_date, period_range, freq):
@@ -24,38 +24,17 @@ def get_date_range(start_date, period_range, freq):
         .tolist()
     )
     date_list = [str(_.year) for _ in date_list]
-    # date_list = [dt.datetime.strptime(f'{_.year}-{_.month}-15', '%Y-%m-%d') for _ in date_list]
     return date_list[1:]
 
 
 def convert_to_date(year, month):
     date = dt.datetime.strptime(f"{year}-{month}", "%Y-%b")
-    # date = dt.datetime.strftime(date, "%Y-%m-%d")
     return date
 
 
-# VISUALIZE
-##############################################
-
-# def graph_final_results(copy_for_graph, target):
-#     import seaborn as sns
-#     import matplotlib.pyplot as plt
-
-#     copy_for_graph['Year'] = copy_for_graph['Year'].astype('str')
-
-#     fig = plt.figure(figsize = (17,5))
-#     plt.title(f'{target} for one county', fontsize = 22)
-#     ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph['converted'], linewidth=3, label = 'Predicted', )
-#     ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph[target], linewidth = 4, color = 'black', label = 'Ground Truth')
-#     ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph['train_set'], linewidth = 2, color = 'green', label = 'Train Set')
-#     ax = sns.lineplot(x=copy_for_graph['Year'], y = copy_for_graph['test_set'], linewidth = 2, color = 'red', label = 'Test Set')
-
-#     ax.invert_yaxis()
-#     plt.show()
-
-
-# DATA FILTERING
-###########################################
+#################################
+# Data Filtering
+#################################
 
 
 def filter_data(df, which, args):
@@ -97,8 +76,9 @@ def filter_data(df, which, args):
     return filtered_df
 
 
-# GRID SEARCH
-#########################################
+#################################
+# Grid Search
+#################################
 
 
 def evaluate_arima_model(X, arima_order):
@@ -138,8 +118,9 @@ def evaluate_models(df, p_values, d_values, q_values):
     return best_cfg
 
 
+#################################
 # AUGMENTED DICKEY-FULLER
-####################################
+#################################
 
 
 def get_adf(df, target):
@@ -155,7 +136,7 @@ def get_adf(df, target):
     best_adf = 1000000000
     for i, col in enumerate(cols_to_check):
         adf_result = adfuller(df[col].dropna())
-        result = {'Seq': i, 'ADF Statistic': adf_result[0], 'P-Value': adf_result[1]}
+        result = {"Seq": i, "ADF Statistic": adf_result[0], "P-Value": adf_result[1]}
         results.append(result)
         if col == target:
             best_adf = adf_result[1]
@@ -165,16 +146,14 @@ def get_adf(df, target):
                 best_adf = adf_result[1]
                 num_diffs = i
 
-        # print(
-        #     f"Column: {col} | ADF Statistic: {adf_result[0]} | P-Value: {adf_result[1]}"
-        # )
     if best_col == "diff_12":
         num_diffs = 12
     return df, best_col, num_diffs, results
 
 
-# UNDIFFERENCING
-##########################################3
+#################################
+# UNDIFFERENCING - DEPRECATED
+#################################
 
 
 def undifference(completed_df, num_diffs, target):
@@ -206,12 +185,13 @@ def undifference(completed_df, num_diffs, target):
     return completed_df
 
 
+#################################
 # FINALIZATION
-#####################################################
+#################################
 
 
 def finalize_results(completed_df, target):
-    completed_df["converted"] = completed_df["converted"]  # .shift(num_diffs)
+    completed_df["converted"] = completed_df["converted"]
 
     copy_for_graph = completed_df.reset_index().copy()
     copy_for_graph.drop(columns=["Year"], inplace=True)
@@ -226,8 +206,9 @@ def finalize_results(completed_df, target):
     return copy_for_graph, df_for_export
 
 
-# ARIMA CONTROL FUNCTION (MAIN)
-###########################################3
+#################################
+# PRIMARY LOGIC
+#################################
 
 
 def control_arima(master_table, target, params):
@@ -251,7 +232,6 @@ def control_arima(master_table, target, params):
     # Augmented Dickey-Fuller test
     adf_filtered_df, best_col, num_diffs = get_adf(filtered_df, target)
 
-    print(adf_filtered_df.shape)
     # gridsearch for hyper parameters
     if target == "MedianIncome":
         best_arima = evaluate_models(
@@ -296,10 +276,12 @@ def control_arima(master_table, target, params):
         filtered_df, model_result_df, left_index=True, right_index=True, how="outer"
     )
 
-    # This will probably fail, but I don't know what to change it to yet.
-    # completed_df.drop(columns = ['FIPS','AgeGroup','diff_1','diff_2'], inplace = True)
-
     return completed_df, num_diffs
+
+
+#################################
+# CONTROL FUNCTION
+#################################
 
 
 def dispatcher(master_table, target, params):

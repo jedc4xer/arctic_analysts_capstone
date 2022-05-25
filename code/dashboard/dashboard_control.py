@@ -1,15 +1,13 @@
 import dash
-
 from pages.home_layout import *
 from pages.navbar_layout import *
-from pages.map_layout import MAP_LAYOUT
-
 import dash_bootstrap_components as dbc
+from pages.map_layout import MAP_LAYOUT
 from dash import Input, Output, dcc, html
-
 from pages.models_layout import MODEL_LAYOUT
 from pages.analysis_layout import ANALYSIS_LAYOUT
 
+#################################
 # Initialize Dashboard
 #################################
 
@@ -24,11 +22,15 @@ app = dash.Dash(
 navbar = NAVIGATION_BAR
 content = html.Div(id="page-content", style=CONTENT_STYLE)
 
+##################################
 # Assign Layout
 ##################################
 
 app.layout = html.Div([dcc.Location(id="url"), navbar, content])
 
+##################################
+# Callback Functions
+##################################
 
 # This callback function determines what to do when different navbar links are clicked.
 @app.callback(
@@ -52,10 +54,6 @@ def render_page_content(pathname):
         print("Picked ML Model Page")
         return MODEL_LAYOUT
 
-    # elif pathname == "/page-4":
-    #     print("Picked Test Page")
-    #     return TEST_LAYOUT
-
     # If the user tries to reach a different page, return a 404 message
     return html.Div(
         [
@@ -69,5 +67,5 @@ def render_page_content(pathname):
 
 
 if __name__ == "__main__":
-    #app.run_server()
+    # app.run_server()
     app.run_server(debug=True)

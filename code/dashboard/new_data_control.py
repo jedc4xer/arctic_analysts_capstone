@@ -15,8 +15,9 @@ from sklearn.preprocessing import PolynomialFeatures
 from config import database, user, password, server
 
 
+#################################
 # HELPER FUNCTIONS
-####################################################
+#################################
 
 
 def convert_to_date(year, month):
@@ -40,8 +41,9 @@ def get_date_range(start_date, period_range, freq):
     return date_list[1:]
 
 
+#################################
 # DATA GENERATORS
-####################################################
+#################################
 
 
 def income_data_generator(current_state="OFF"):
@@ -122,7 +124,8 @@ def income_data():
     ]
     while True:
         yield master_df
-        
+
+
 def income_vs_house_price():
 
     data_gen = data_getter.dispatcher()
@@ -157,26 +160,31 @@ def income_vs_house_price():
 #     return
 
 
-
-
-
+#################################
 # ARIMA DISPATCHER
-####################################################
+#################################
 
 
 def run_arima(master_df):
+    """ This function runs the data through the ADF function in the ARIMA module"""
 
-    target, params = yield "Started Arima"
+    target, params = yield "Started ADF"
     while True:
 
         filtered_data = arima.filter_data(master_df, target, params)
-        adf_filtered_df, best_col, num_diffs, results = arima.get_adf(filtered_data, target)
+        adf_filtered_df, best_col, num_diffs, results = arima.get_adf(
+            filtered_data, target
+        )
 
         target, params = yield adf_filtered_df, results
 
 
-# ARIMA FUNCTIONS
-####################################################
+#################################
+# ARIMA MODELS
+#################################
+
+# 340021 | 65+ Failed
+# 34033 | 65+ Failed
 
 
 def get_model():
@@ -199,7 +207,7 @@ def get_model():
         filtered_df = filtered_df.dropna()
         filtered_df = filtered_df.drop_duplicates(subset=drop_subset)
 
-        old_path = "model_dump/old_model_dump" # Requires undifferencing
+        old_path = "model_dump/old_model_dump"  # Requires undifferencing
         new_path = "model_dump/"
         model_list = os.listdir(new_path)
         target_model = [
@@ -241,7 +249,7 @@ def get_model():
         #         except:
         #             pass
         # combined_df["full_results"] = new_items
-        
+
         combined_df["full_results"] = combined_df["predicted_mean"]
         combined_df["full_results"].update(combined_df["MedianIncome"])
         combined_df["FIPS"] = fips
@@ -250,47 +258,54 @@ def get_model():
         target, params = yield combined_df
 
 
+#################################
 # AFFORDABILITY CALCULATIONS
-####################################################
+#################################
+
 
 def desparse_affordability(df):
     subset = df[(df.Year <= 2019) & (df.Year > 2004)]
-    subset = subset.drop(columns = ['YearID', 'MonthID', 'NewUnits','NewBuildings'])
-    subset['MonthlyIncome'] = subset['MedianIncome']/12
-    subset.drop(columns = ['MedianIncome'], inplace = True)
+    subset = subset.drop(columns=["YearID", "MonthID", "NewUnits", "NewBuildings"])
+    subset["MonthlyIncome"] = subset["MedianIncome"] / 12
+    subset.drop(columns=["MedianIncome"], inplace=True)
 
     return subset
 
-def affordability_calculations(final_table, down_payment, mort_inc_ratio, term, tax_rate, time_frame):
-    
-    for row in final_table:
-            P = final_table["MedianHousePrice"] - (
-                final_table["MedianHousePrice"] * down_payment
-            )
-            r = final_table["AverageRate"] / 100
-            t = term
-            n = 12
-            monthly_tax = (final_table["MedianHousePrice"] * tax_rate) / 12
-            final_table["MonthlyMortgage"] = (
-                P
-                * (
-                    ((r / n) * pow((1 + (r / n)), (n * t)))
-                    / (pow((1 + r / n), (n * t)) - 1)
-                )
-            ) + monthly_tax
 
-        # mortgage to income ratio
-    final_table["mortgage_income_ratio"] = final_table["MonthlyMortgage"] / final_table["MonthlyIncome"]
+def affordability_calculations(
+    final_table, down_payment, mort_inc_ratio, term, tax_rate, time_frame
+):
+
+    for row in final_table:
+        P = final_table["MedianHousePrice"] - (
+            final_table["MedianHousePrice"] * down_payment
+        )
+        r = final_table["AverageRate"] / 100
+        t = term
+        n = 12
+        monthly_tax = (final_table["MedianHousePrice"] * tax_rate) / 12
+        final_table["MonthlyMortgage"] = (
+            P
+            * (
+                ((r / n) * pow((1 + (r / n)), (n * t)))
+                / (pow((1 + r / n), (n * t)) - 1)
+            )
+        ) + monthly_tax
+
+    # mortgage to income ratio
+    final_table["mortgage_income_ratio"] = (
+        final_table["MonthlyMortgage"] / final_table["MonthlyIncome"]
+    )
 
     return final_table
 
 
 def calculate_affordability(master_df):
-    
+
     # reading in predictions
     path = "shapefiles/dat_cbo.csv"
     df = pd.read_csv(path)
-
+    df = df.fillna(0)
     # Preparing
     #########################
     df["MedianIncome"].update(df["train_and_predicted"])
@@ -306,7 +321,15 @@ def calculate_affordability(master_df):
     # Filtering master table to just the targeted data
     target_df = master_df[(master_df.Year > 2019) & (master_df.Year < 2023)]
     target_df = target_df[
-        ["FIPS", "Year", 'Month', "AverageRate", "AveragePoints", "County", "MedianHousePrice"]
+        [
+            "FIPS",
+            "Year",
+            "Month",
+            "AverageRate",
+            "AveragePoints",
+            "County",
+            "MedianHousePrice",
+        ]
     ]
 
     # Merging predicting with actual
@@ -317,15 +340,15 @@ def calculate_affordability(master_df):
         right_on=["Year", "FIPS"],
         how="outer",
     )
-    
+
     early_data = desparse_affordability(master_df)
-    
+
     ##########################3
     # Finished filtering
 
     # Actual Calculator
     # down_payment started as .12, mort_inc_ratio started as .25, term started as 30, tax_rate started as .0189
-    
+
     # TODO - We need to run the affordability calculation on all years, and not just the predicted
     # Then we can have a chart showing how affordability changed over time.
     # To do this, we may also need to use months somehow
@@ -338,22 +361,27 @@ def calculate_affordability(master_df):
         time_frame,
     ) = yield "Started Affordability Calculator"
     while True:
-        
+
         final_table = merged_tables.copy()
         try:
-            final_table_predicted = affordability_calculations(final_table, down_payment, mort_inc_ratio, term, tax_rate, time_frame)
-            final_table_historical = affordability_calculations(early_data, down_payment, mort_inc_ratio, term, tax_rate, time_frame)
+            final_table_predicted = affordability_calculations(
+                final_table, down_payment, mort_inc_ratio, term, tax_rate, time_frame
+            )
+            final_table_historical = affordability_calculations(
+                early_data, down_payment, mort_inc_ratio, term, tax_rate, time_frame
+            )
         except Exception as E:
             print(E)
 
-        
         final_table = pd.concat([final_table_historical, final_table_predicted])
+
+        final_table.fillna(0, inplace=True)
 
         # affordability determination
         def affordable_condition(x):
             if x <= mort_inc_ratio:
                 return "Yes"
-            elif np.isnan(x):
+            elif x == 0:  # elif np.isnan(x):
                 return "Missing"
             else:
                 return "No"
@@ -362,7 +390,13 @@ def calculate_affordability(master_df):
             affordable_condition
         )
 
-        
+        # For understanding the data at this point
+        # final_table[(final_table.affordable == 'No')].to_html('predicted_test_table.html', index = False)
+        # final_table.to_csv('predicted_test.csv',index = False)
+        print("\n")
+        print(final_table.drop_duplicates().shape)
+        print(final_table.shape)
+        print("\n")
 
         # Data Return Logic
         if time_frame == "monthly":
@@ -386,7 +420,9 @@ def calculate_affordability(master_df):
             final_annual_df["MonthlyMortgage"] = final_annual_df[
                 "MonthlyMortgage"
             ].round(2)
-            
+
+            # For understanding the data at this point
+            # final_annual_df.to_csv('predicted_test2.csv',index = False)
             (
                 down_payment,
                 mort_inc_ratio,
