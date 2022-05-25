@@ -12,17 +12,17 @@ NAVIGATION_BAR = dbc.Navbar(
                         dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
                         dbc.Col(
                             dbc.NavbarBrand(
-                                "Home Affordability | New Jersey", className="ms-3"
+                                "Home Affordability | New Jersey", className="ms-2"
                             )
                         ),
                     ],
-                    className="g-0 ms-auto flex-nowrap mt-4 mt-md-0",
+                    className="g-0 ms-auto flex-nowrap mt-3 mt-md-0",
                     align="center",
                 ),
                 href="https://www.nj.gov/njhrc/",
                 style={"textDecoration": "none"},
             ),
-            dbc.Col(width=4),
+            dbc.Col(width=3),
             dbc.Col(
                 dbc.Nav(
                     dbc.NavLink("Home", href="/", active="exact"), pills=True, fill=True
@@ -45,6 +45,13 @@ NAVIGATION_BAR = dbc.Navbar(
             dbc.Col(
                 dbc.Nav(
                     dbc.NavLink("ML Models", href="/page-3", active="exact"),
+                    pills=True,
+                    fill=True,
+                )
+            ),
+            dbc.Col(
+                dbc.Nav(
+                    dbc.NavLink("About Us", href="/page-4", active="exact"),
                     pills=True,
                     fill=True,
                 )
